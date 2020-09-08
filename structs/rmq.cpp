@@ -10,11 +10,11 @@ struct rmq {
 		copy(begin(vals), end(vals), begin(t)+d);
 		for(int i=d-1;i>0;--i) t[i] = f(t[i*2], t[i*2+1]);
 	}
-		
+	
 	void set_value(size_t i, const T& val){
 		for(t[i+=d]=val; i>1; i>>=1) t[i>>1] = f(t[i], t[i^1]);
 	}
-		
+	
 	T operator()(size_t l, size_t r){
 		T res = t[l+=d];
 		for(++l,r+=d; l<r; l>>=1,r>>=1){
@@ -23,4 +23,6 @@ struct rmq {
 		}
 		return res;
 	}
+	
+	T operator()(){ return t[1]; }
 };
