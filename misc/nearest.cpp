@@ -8,7 +8,7 @@
 
 template<template<typename> class C, typename T>
 vector<int> nearest(const vector<T> &v, int dir){
-    static constexpr C<T> cmp;
+	static constexpr C<T> cmp;
 	assert(abs(dir) == 1);
 	int n = size(v), fin = dir>0 ? n : -1;
 	vector<int> s, res(n, fin);
