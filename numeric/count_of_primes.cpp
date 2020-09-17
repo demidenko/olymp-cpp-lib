@@ -43,7 +43,7 @@ struct countOfPrimes{
 		}
 	}
 
-	///count of numbers 1<=X<=n with min primes divisor>=pr[m]
+	///count of numbers 1<=X<=n whose minimal prime divisor >= pr[m]
 	vector<vector<int>> mem;
 	ll f(ll n, int m){
 		if(m==0) return n;
@@ -90,7 +90,7 @@ struct sumOfPrimes{
 	sumOfPrimes(ll n){
 		getPrimes(root2(n+1)*2, pr);
 		prespi.assign(pr.back()+1, 0);
-		ll sum = 0;
+		T sum = 0;
 		for(int i=0,j=0;i<=pr.back();++i){
 			if(i==pr[j]) sum+=pr[j++];
 			prespi[i] = sum;
@@ -104,7 +104,7 @@ struct sumOfPrimes{
 		}
 	}
 
-	///sum of numbers 1<=X<=n with min primes divisor>=pr[m]
+	///sum of numbers 1<=X<=n whose minimal prime divisor >= pr[m]
 	vector<vector<T>> mem;
 	T sf(ll n, int m){
 		if(m==0) return sar(n);
