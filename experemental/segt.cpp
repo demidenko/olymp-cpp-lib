@@ -4,9 +4,10 @@ struct segt {
 	vector<T> t;
 	size_t d;
 	
-	segt(size_t n, function<T(size_t)> get): d(n) {
-		t.resize(d*2);
-		for(size_t i=0;i<d;++i) t[i+d] = get(i);
+	segt(size_t n, function<T(size_t)> get) {
+		for(d=1; d<n; d<<=1);
+		t.assign(d*2, get_neutral());
+		for(size_t i=0;i<n;++i) t[i+d] = get(i);
 		for(int i=d-1;i>0;--i) t[i] = f(t[i*2], t[i*2+1]);
 	}
 	
@@ -24,4 +25,6 @@ struct segt {
 		}
 		return f(fl,fr);
 	}
+	
+	T operator()(){ return t[1]; }
 };
