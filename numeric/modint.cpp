@@ -22,3 +22,10 @@ mint operator/(mint a, const mint &b){ a/=b; return a; }
 mint operator-(mint a){ if(a.x) a.x = mod - a.x; return a; }
 mint operator""m(unsigned long long x){ return mint(x); }
 ostream& operator<<(ostream &o, const mint &m){ return o<<m.x; }
+
+mint mpow(mint a, uint64_t n){
+	mint res = 1;
+	for(; n; n>>=1, a*=a) if(n&1) res*=a;
+	return res;
+}
+

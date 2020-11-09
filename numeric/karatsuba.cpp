@@ -1,8 +1,12 @@
+void multiply_brute(auto a, size_t n, auto b, size_t m, auto ret){
+	fill(ret, ret+n+m-1, 0);
+	for(size_t i=0; i<n; ++i)
+	for(size_t j=0; j<m; ++j) ret[i+j] += a[i]*b[j];
+}
+
 void go_karatsuba(auto a, auto b, auto ret, size_t n){
-	if(n<8){
-		fill(ret, ret+n*2-1, 0);
-		for(size_t i=0; i<n; ++i)
-		for(size_t j=0; j<n; ++j) ret[i+j] += a[i]*b[j];
+	if(n<16){
+		multiply_brute(a, n, b, n, ret);
 	}else
 	if(n&1){
 		go_karatsuba(a,b,ret,n-1);
@@ -28,13 +32,19 @@ void go_karatsuba(auto a, auto b, auto ret, size_t n){
 }
 
 template<class T>
-vector<T> multiply(const vector<T> &_a, const vector<T> &_b){
-	if(empty(_a) || empty(_b)) return {};
-	auto n = max(size(_a), size(_b));
-	vector<T> a(n), b(n);
-	copy(begin(_a), end(_a), begin(a));
-	copy(begin(_b), end(_b), begin(b));
-	vector<T> ret(n*6);
-	go_karatsuba(begin(a), begin(b), begin(ret), n);
-	return vector<T>(begin(ret), begin(ret)+size(_a)+size(_b)-1);
+vector<T> multiply(const vector<T> &a, const vector<T> &b){
+	if(size(a) < size(b)) return multiply(b, a);
+	if(empty(b)) return {};
+	size_t n = size(a), m = size(b);
+	if(1ULL*m*m < n){
+		vector<T> ret(n+m-1);
+		multiply_brute(begin(a), n, begin(b), m, begin(ret));
+		return ret;
+	}else{
+		vector<T> b_ex(n);
+		copy(begin(b), end(b), begin(b_ex));
+		vector<T> ret(n*6);
+		go_karatsuba(begin(a), begin(b_ex), begin(ret), n);
+		return vector<T>(begin(ret), begin(ret)+n+m-1);
+	}
 }
