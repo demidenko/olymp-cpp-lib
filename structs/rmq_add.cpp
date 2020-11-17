@@ -38,7 +38,7 @@ struct rmq_add {
 	size_t d;
 	
 	void _build(){
-		for(size_t i=d-1; i; --i) t[i] = max(t[i*2], t[i*2+1]);
+		for(size_t i=d; i-->1; ) t[i] = max(t[i*2], t[i*2+1]);
 	}
 	
 	void _add(size_t i, size_t j, const T &val, size_t l, size_t r, size_t v){
