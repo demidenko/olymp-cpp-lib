@@ -10,13 +10,14 @@ struct rsq_assign {
 	}
 	
 	void assign(size_t l, size_t r, const A &value){
+		assert(value!=undefined);
 		if(r>d) r = d;
 		if(l<r) _assign(l,r,value,0,d,1);
 	}
 	
 	T operator()(size_t l, size_t r){
 		if(r>d) r = d;
-		T buf = 0;
+		T buf = T();
 		if(l<r) _calc(l,r,0,d,1,buf);
 		return buf;
 	}
@@ -24,10 +25,9 @@ struct rsq_assign {
 	pair<size_t, T> take(size_t start, T limit){
 		limit+=operator()(0,start);
 		size_t v = 1, l = 0, r = d;
-		for(;;){
-			if(t[v].first<=limit) return {r, limit-t[v].first};
-			if(v>=d) return {l, limit};
-			_push(v,r-l);
+		if(t[v].first<=limit) return {r, limit-t[v].first};
+		for(;v<d;){
+			if(A a = t[v].second; a!=undefined) return {size_t(limit/a)+l, limit%a};
 			v<<=1;
 			size_t m = (l+r)/2;
 			if(t[v].first<=limit){
@@ -36,6 +36,7 @@ struct rsq_assign {
 				l = m;
 			}else r = m;
 		}
+		return {l, limit};
 	}
 	
 	private:
