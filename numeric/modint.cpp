@@ -4,13 +4,15 @@ int inv_mod(int a, int m){
 	return a==1 ? 1 : m-m*int64_t(inv_mod(m%a, a))/a;
 }
 
-const int mod = 1e9+7 ;
+const int mod = 998'244'353 ;
 struct mint {
 	int x;
 	mint(): x(0) {}
 	mint(const auto &val): x(val%mod) { if(x<0) x+=mod; }
 };
 
+bool operator==(const mint &a, const mint &b){ return a.x==b.x; }
+bool operator!=(const mint &a, const mint &b){ return a.x!=b.x; }
 void operator+=(mint &a, const mint &b){ a.x+=b.x; if(a.x>=mod) a.x-=mod; }
 mint operator+(mint a, const mint &b){ a+=b; return a; }
 void operator-=(mint &a, const mint &b){ a.x-=b.x; if(a.x<0) a.x+=mod; }
