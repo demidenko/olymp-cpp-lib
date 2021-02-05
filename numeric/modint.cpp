@@ -25,6 +25,20 @@ mint operator-(mint a){ if(a.x) a.x = mod - a.x; return a; }
 mint operator""m(unsigned long long x){ return mint(x); }
 ostream& operator<<(ostream &o, const mint &m){ return o<<m.x; }
 
+struct Cnk {
+	vector<mint> f, fi;
+	Cnk(int n): f(n+1), fi(n+1){
+		f[0] = fi[0] = 1;
+		for(int i=1; i<=n; ++i) f[i] = f[i-1]*i;
+		fi[n] = 1 / f[n];
+		for(int i=n; i>1; --i) fi[i-1] = fi[i]*i;
+	}
+	mint operator()(int n, int k){
+		if(n<k) return 0; assert(k>=0 && n<size(f));
+		return f[n]*fi[n-k]*fi[k];
+	}
+};
+
 mint mpow(mint a, uint64_t n){
 	mint res = 1;
 	for(; n; n>>=1, a*=a) if(n&1) res*=a;
