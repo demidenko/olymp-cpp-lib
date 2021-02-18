@@ -1,15 +1,14 @@
 struct dsu {
-	vector<int> p, sz;
-	dsu(int n): sz(n,1), p(n) {
+	dsu(size_t n = 0): sz(n,1), p(n) {
 		iota(ALL(p),0);
 	}
-	int get(int i){
-		int v = i;
+	size_t get(size_t i){
+		size_t v = i;
 		while(v!=p[v]) v = p[v];
 		while(i!=p[i]) i = exchange(p[i],v);
 		return v;
 	}
-	bool unite(int i, int j){
+	bool unite(size_t i, size_t j){
 		i = get(i);
 		j = get(j);
 		if(i==j) return false;
@@ -18,4 +17,10 @@ struct dsu {
 		sz[i]+=sz[j];
 		return true;
 	}
+	size_t size(size_t i){
+		return sz[get(i)];
+	}
+	
+	private:
+	vector<size_t> p, sz;
 };
