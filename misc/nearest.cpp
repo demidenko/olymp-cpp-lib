@@ -1,15 +1,15 @@
 /*
 	vector<int> a;
 	auto next_less = 
-		nearest<less>(a, 1);
+		nearest<less, 1>(a);
 	auto prev_greater_or_equal = 
-		nearest<greater_equal>(a, -1);
+		nearest<greater_equal, -1>(a);
 */
 
-template<template<typename> class C, typename T>
-vector<int> nearest(const vector<T> &v, int dir){
+template<template<typename> class C, int dir, typename T>
+vector<int> nearest(const vector<T> &v){
 	static constexpr C<T> cmp;
-	assert(abs(dir) == 1);
+	static_assert(abs(dir) == 1);
 	int n = size(v), fin = dir>0 ? n : -1;
 	vector<int> s, res(n, fin);
 	for(int i = dir>0 ? 0 : n-1; i!=fin; i+=dir){
