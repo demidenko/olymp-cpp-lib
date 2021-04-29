@@ -24,6 +24,7 @@ vector<size_t> strong_connected_components(const graph &g) {
         if(h[v]==tin[v]) for(++cn; !comp[v]; s.pop_back()) comp[s.back()] = cn;
     };
     for(size_t i=0; i<n; ++i) if(!tin[i]) css(i);
+    for(size_t &x : comp) x = cn-x;
     return comp;
 };
 
@@ -48,7 +49,7 @@ struct sat2 {
     vector<bool> solve() {
         auto cp = strong_connected_components(g);
         vector<bool> res(n);
-        for(size_t i=0; i<n; ++i) res[i] = cp[i]<cp[i+n];
+        for(size_t i=0; i<n; ++i) res[i] = cp[i]>cp[i+n];
         return res;
     }
     private:
