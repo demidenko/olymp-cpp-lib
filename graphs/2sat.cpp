@@ -46,11 +46,15 @@ struct sat2 {
         g.add_dir_edge(i+n*fi, j+n*!fj);
         g.add_dir_edge(j+n*fj, i+n*!fi);
     }
-    vector<bool> solve() {
+    bool solve(vector<bool> &res) {
         auto cp = strong_connected_components(g);
-        vector<bool> res(n);
-        for(size_t i=0; i<n; ++i) res[i] = cp[i]>cp[i+n];
-        return res;
+		res.resize(n);
+        for(size_t i=0; i<n; ++i){
+			size_t x = cp[i], y = cp[i+n];
+			if(x == y) return false;
+			res[i] = x > y;
+		}
+        return true;
     }
     private:
     const size_t n;
