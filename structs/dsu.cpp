@@ -1,6 +1,6 @@
 struct dsu {
 	dsu(size_t n = 0): sz(n,1), p(n) {
-		iota(ALL(p),0);
+		iota(begin(p),end(p),0);
 	}
 	size_t get(size_t i){
 		size_t v = i;
