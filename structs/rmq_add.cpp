@@ -1,7 +1,6 @@
 template<typename T, const T&(*f)(const T&, const T&) = std::min<T> >
 struct rmq_add {
-	constexpr static T inf = numeric_limits<T>::max()/2;
-	constexpr static T neutral = -f(inf,-inf);
+	constexpr static T neutral = f(numeric_limits<T>::min(), numeric_limits<T>::max()) ^ numeric_limits<T>::min() ^ numeric_limits<T>::max();
 	
 	rmq_add(size_t sz = 0){
 		for(d=1;d<sz;d<<=1);
