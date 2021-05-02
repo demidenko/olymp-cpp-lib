@@ -1,6 +1,6 @@
 template<typename T, const T&(*f)(const T&, const T&) = std::min<T> >
 struct rmq_assign {
-	constexpr static T neutral = f(numeric_limits<T>::min(), numeric_limits<T>::max()) ^ numeric_limits<T>::min() ^ numeric_limits<T>::max();
+	constexpr static T neutral = [](T m,T M){return f(m,M)==m?M:m;}(numeric_limits<T>::min(),numeric_limits<T>::max());
 	
 	template<typename C>
 	rmq_assign(const vector<C> &vals, const T&_u=T()) : undefined(_u) {
