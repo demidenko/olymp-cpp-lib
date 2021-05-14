@@ -31,21 +31,19 @@ struct rmq_assign {
 		for(size_t i=d; i-->1; ) t[i].first = f(t[i*2].first, t[i*2+1].first);
 	}
 	
-	void _push(size_t v, size_t len) {
+	void _push(size_t v) {
 		if(t[v].second) {
-			t[v*2].first = t[v*2+1].first = t[v].first;
-			t[v*2].second = t[v*2+1].second = true;
+			t[v*2] = t[v*2+1] = t[v];
 			t[v].second = false;
 		}
 	}
 	
 	void _assign(size_t i, size_t j, const T &val, size_t l, size_t r, size_t v){
 		if(i==l && j==r){
-            t[v].first = val;
-			t[v].second = true;
+			t[v] = {val, true};
 			return ;
 		}
-		_push(v,r-l);
+		_push(v);
 		size_t m = (l+r)>>1;
 		if(i<m) _assign(i,min(j,m),val,l,m,v*2);
 		if(m<j) _assign(max(i,m),j,val,m,r,v*2+1);
