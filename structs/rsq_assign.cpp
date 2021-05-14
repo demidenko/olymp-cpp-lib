@@ -2,15 +2,14 @@ template<typename T, typename A = T>
 struct rsq_assign {
 	
 	template<typename C>
-	rsq_assign(const vector<C> &vals, const A&_u=A()) : undefined(_u) {
+	rsq_assign(const vector<C> &vals) {
 		for(d=2; d<size(vals); d<<=1);
-		t.assign(d*2, pair(T(), undefined));
+		t.assign(d*2, pair(T(), nullopt));
 		for(size_t i=0; i<size(vals); ++i) t[i+d].first = vals[i];
 		_build();
 	}
 	
 	void assign(size_t l, size_t r, const A &value){
-		assert(value!=undefined);
 		if(r>d) r = d;
 		if(l<r) _assign(l,r,value,0,d,1);
 	}
@@ -27,33 +26,30 @@ struct rsq_assign {
 		size_t v = 1, l = 0, r = d;
 		if(t[v].first<=limit) return {r, limit-t[v].first};
 		for(;v<d;){
-			if(A a = t[v].second; a!=undefined) return {size_t(limit/a)+l, limit%a};
+			if(auto a = t[v].second) return {size_t(limit / *a) + l, limit % *a};
 			v<<=1;
-			size_t m = (l+r)/2;
-			if(t[v].first<=limit){
+			if(size_t m = (l+r)/2; t[v].first<=limit){
 				limit-=t[v].first;
 				++v;
 				l = m;
-			}else r = m;
+			} else r = m;
 		}
 		return {l, limit};
 	}
 	
 	private:
-	
 	size_t d;
-	const A undefined;
-	vector<pair<T,A>> t;
+	vector<pair<T,optional<A>>> t;
 	
-	void _build(){
+	void _build() {
 		for(size_t i=d; i-->1; ) t[i].first = t[i*2].first + t[i*2+1].first;
 	}
 	
-	void _push(size_t v, size_t len){
-		if(A &a = t[v].second; a!=undefined){
+	void _push(size_t v, size_t len) {
+		if(auto &a = t[v].second){
 			t[v*2].second = t[v*2+1].second = a;
-			t[v*2].first = t[v*2+1].first = T(len>>1) * a;
-			a = undefined;
+			t[v*2].first = t[v*2+1].first = T(len>>1) * *a;
+			a.reset();
 		}
 	}
 	
@@ -72,10 +68,10 @@ struct rsq_assign {
 	
 	void _calc(size_t i, size_t j, size_t l, size_t r, size_t v, T &buf){
 		if(i==l && j==r) buf+=t[v].first; else
-		if(t[v].second==undefined){
+		if(auto a = t[v].second; !a){
 			size_t m = (l+r)>>1;
 			if(i<m) _calc(i,min(j,m),l,m,v*2,buf);
 			if(m<j) _calc(max(i,m),j,m,r,v*2+1,buf);
-		}else buf+= T(j-i) * t[v].second;
+		} else buf+= T(j-i) * *a;
 	}
 };
