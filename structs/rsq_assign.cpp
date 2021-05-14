@@ -47,16 +47,14 @@ struct rsq_assign {
 	
 	void _push(size_t v, size_t len) {
 		if(auto &a = t[v].second){
-			t[v*2].second = t[v*2+1].second = a;
-			t[v*2].first = t[v*2+1].first = T(len>>1) * *a;
+			t[v*2] = t[v*2+1] = {T(len>>1) * *a, a};
 			a.reset();
 		}
 	}
 	
 	void _assign(size_t i, size_t j, const A &val, size_t l, size_t r, size_t v){
 		if(i==l && j==r){
-			t[v].second = val;
-			t[v].first = T(r-l) * val;
+			t[v] = {T(r-l) * val, val};
 			return ;
 		}
 		_push(v,r-l);
