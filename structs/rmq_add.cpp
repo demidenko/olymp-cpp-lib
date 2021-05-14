@@ -19,16 +19,15 @@ struct rmq_add {
 		_build();
 	}
 	
-	void add(int l, int r, const T& val){
-		if(l<0) l = 0;
+	void add(size_t l, size_t r, const T& val){
 		if(r>d) r = d;
-		if(l>=r) return ;
-		_add(l,r,val,0,d,1);
+		if(l<r) _add(l,r,val,0,d,1);
 	}
 	
-	T operator()(int l, int r){
-		assert(0<=l && l<r && r<=d);
-		return _calc(l,r,0,d,1);
+	T operator()(size_t l, size_t r){
+		if(r>d) r = d;
+		if(l<r) return _calc(l,r,0,d,1);
+		return neutral;
 	}
 	
 	private:
@@ -37,7 +36,7 @@ struct rmq_add {
 	size_t d;
 	
 	void _build(){
-		for(size_t i=d; i-->1; ) t[i] = max(t[i*2], t[i*2+1]);
+		for(size_t i=d; i-->1; ) t[i] = f(t[i*2], t[i*2+1]);
 	}
 	
 	void _add(size_t i, size_t j, const T &val, size_t l, size_t r, size_t v){
