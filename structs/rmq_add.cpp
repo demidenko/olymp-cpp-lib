@@ -23,13 +23,30 @@ struct rmq_add {
 		if(l<r) return _calc(l,r,0,d,1);
 		return neutral;
 	}
+	T operator()(){ return t[1].first; }
+	T operator[](size_t i) {
+		T result = t[i+=d].first;
+		for(i>>=1; i; i>>=1) result+=t[i].second;
+		return result;
+	}
+	
+	void set_value(size_t i, const T &val) {
+		T up = T();
+		for(size_t v=(i+d)>>1; v>0; v>>=1) up+=t[v].second;
+		t[i+d].first = t[i+d].second = val-up;
+		for(size_t v=(i+d)>>1; v>0; v>>=1) _build_node(v);
+	}
 	
 	private:
 	size_t d;
 	vector<pair<T,T>> t;
 	
 	void _build() {
-		for(size_t i=d; i-->1; ) t[i].first = f(t[i*2].first, t[i*2+1].first);
+		for(size_t i=d; i-->1; ) _build_node(i);
+	}
+	
+	inline void _build_node(size_t v) {
+		t[v].first = f(t[v*2].first, t[v*2+1].first) + t[v].second;
 	}
 	
 	void _add(size_t i, size_t j, const T &val, size_t l, size_t r, size_t v){
@@ -41,7 +58,7 @@ struct rmq_add {
 		size_t m = (l+r)>>1;
 		if(i<m) _add(i,min(j,m),val,l,m,v*2);
 		if(m<j) _add(max(i,m),j,val,m,r,v*2+1);
-		t[v].first = f(t[v*2].first, t[v*2+1].first) + t[v].second;
+		_build_node(v);
 	}
 	
 	T _calc(size_t i, size_t j, size_t l, size_t r, size_t v){
