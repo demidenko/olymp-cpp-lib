@@ -3,16 +3,16 @@ struct rsq_add {
 	rsq_add(size_t sz): f(sz) {}
 	
 	rsq_add(const vector<auto> &vals): f(size(vals)) {
-        for(size_t i=0; i<size(vals); ++i) {
-            T x = i ? T(vals[i]) - T(vals[i-1]) : vals[i];
-            f[i].first+=x;
-            f[i].second+=x*T(i);
-            if(size_t j = i|(i+1); j<size(f)){
-                f[j].first+=f[i].first;
-                f[j].second+=f[i].second;
-            }
-        }
-    }
+		for(size_t i=0; i<size(vals); ++i) {
+			T x = i ? T(vals[i]) - T(vals[i-1]) : vals[i];
+			f[i].first+=x;
+			f[i].second+=x*T(i);
+			if(size_t j = i|(i+1); j<size(f)){
+				f[j].first+=f[i].first;
+				f[j].second+=f[i].second;
+			}
+		}
+	}
 	
 	void add(size_t l, size_t r, const T &val) {
 		if(l>=r) return ;
