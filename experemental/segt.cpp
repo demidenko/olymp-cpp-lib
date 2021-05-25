@@ -1,8 +1,8 @@
-template<typename T, T(*f)(const T&, const T&)>
+template<typename T, T(*f)(const T&, const T&), bool well_formed = true>
 struct segt {
-	
 	segt(size_t n, function<T(size_t)> gen) {
-		for(d=1; d<n; d<<=1);
+		if constexpr(!well_formed) d = n;
+		else for(d=1; d<n; d<<=1);
 		t.assign(d*2, T());
 		for(size_t i=0;i<n;++i) t[i+d] = gen(i);
 		for(size_t i=d;i-->1;) t[i] = f(t[i*2], t[i*2+1]);
@@ -23,7 +23,10 @@ struct segt {
 		return f(fl,fr);
 	}
 	
-	const T& operator()(){ return t[1]; }
+	conditional_t<well_formed, const T&, T> operator()(){
+		if constexpr (well_formed) return t[1];
+		else return operator()(0, d);
+	}
 	
 	private:
 	vector<T> t;
