@@ -1,16 +1,3 @@
-struct graph {
-	graph(size_t n): g(n) {}
-	void add_dir_edge(size_t from, size_t to) {
-		g[from].push_back(to);
-	}
-	const vector<size_t> operator[](size_t i) const {
-		return g[i];
-	}
-	size_t size() const { return g.size(); }
-	private:
-	vector<vector<size_t>> g;
-};
-
 vector<size_t> strong_connected_components(const graph &g) {
 	size_t n = g.size(), tn = 0, cn = 0;
 	vector<size_t> tin(n), h(n), comp(n), s;
