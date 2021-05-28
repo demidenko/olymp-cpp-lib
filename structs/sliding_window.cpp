@@ -1,4 +1,4 @@
-template<typename T, const T&(*f)(const T&, const T&) = std::min<T> >
+template<typename T, const T& f(const T&, const T&) = std::min<T> >
 struct sliding_window {
 	constexpr static T neutral = [](T m,T M){return f(m,M)==m?M:m;}(numeric_limits<T>::min(),numeric_limits<T>::max());
 	
