@@ -1,10 +1,10 @@
 template<typename S, typename T>
 auto dijkstra(const S &start,
-    function<void(const S&, function<void(const S&, const T&)>)> gen
-	//pass as [](const auto &s, auto upd){... upd(to, edge_cost); ...}
+    function<void(const S&, const function<void(const S&, const T&)>&)> gen
+	//pass as [](const auto &s, auto &upd){... upd(to, edge_cost); ...}
 ){
-    map<S, T> dist = {{start,0}};
-    set<pair<T,S>> q = {{0,start}};
+    map<S, T> dist{{start,0}};
+    set<pair<T,S>> q{{0,start}};
     T d;
     auto upd = [&dist, &q, &d](const S &v, const T &edge_cost) {
         const T cost = edge_cost + d;
