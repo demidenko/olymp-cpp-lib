@@ -1,32 +1,56 @@
 struct binary_lifter {
-	binary_lifter(const vector<size_t> &p): n(size(p)) {
-		for(size_t i=0;i<n;++i) assert(0<=p[i] && p[i]<=n && p[i]!=i); //weak check
+	const static inline size_t none = -1;
+	
+	binary_lifter(): L(1), jump(1) {}
+	
+	binary_lifter(const vector<size_t> &p) {
+		size_t n = size(p);
+		for(size_t i=0;i<n;++i) assert(p[i] == none || (0<=p[i] && p[i]<n && p[i]!=i)); //weak check
 		for(L = 1; (1<<L)<n; ++L);
-		jump.assign(L, vector(n+1,n));
-		copy(ALL(p), begin(jump[0]));
-		jump[0][n] = n;
-		for(size_t h=1;h<L;++h){
-			for(size_t i=0;i<=n;++i) jump[h][i] = jump[h-1][jump[h-1][i]];
+		jump.assign(L, vector(n,none));
+		jump[0] = p;
+		for(size_t h=1; h<L; ++h)
+			for(size_t i=0; i<n; ++i)
+				if(size_t j=jump[h-1][i]; j!=none) jump[h][i] = jump[h-1][j];
+	}
+	
+	void push_back(size_t parent) {
+		const size_t cur = count();
+		assert(parent == none || parent < cur);
+		size_t j = jump[0].emplace_back(parent);
+		for(size_t h=1; h<L; ++h) {
+			size_t &p = jump[h].emplace_back(none);
+			if(j!=none) p = jump[h-1][j];
+			j = p;
+		}
+		if(j!=none && jump[L-1][j]!=none) {
+			jump.emplace_back(cur+1, none);
+			for(size_t i=0; i<=cur; ++i) 
+				if(size_t j = jump[L-1][i]; j!=none)
+					jump[L][i] = jump[L-1][j];
+			++L;
 		}
 	}
 	
-	struct result { size_t first_fail, count_of_jumps, last_nonfail; };
-	result first_fail(size_t i, const function<bool(size_t)> &is_fail) {
-		if(is_fail(i)) return { i, 0, n };
+	struct result { size_t first_fail, last_nonfail, count_of_jumps; };
+	result first_fail(size_t i, const function<bool(size_t)> &is_fail) const {
+		if(is_fail(i)) return { i, none, 0 };
 		size_t jumps = 0;
 		for(size_t h=L; h--;){
 			size_t j = jump[h][i];
-			if(j<n && !is_fail(j)) i = j, jumps+=1<<h;
+			if(j!=none && !is_fail(j)) i = j, jumps+=size_t(1)<<h;
 		}
-		return { jump[0][i], jumps+1, i };
+		return { jump[0][i], i, jumps+1 };
 	}
 	
-	size_t kth_jump(size_t i, size_t k) {
-		for(size_t l=0;l<L;++l) if(k>>l&1) i = jump[l][i];
+	size_t kth_jump(size_t i, size_t k) const {
+		for(size_t h=0; h<L; ++h) if(k>>h&1) i = jump[h][i];
 		return i;
 	}
 	
+	size_t count() const { return size(jump[0]); }
+	
 	private:
-	size_t n, L;
+	size_t L;
 	vector<vector<size_t>> jump;
 };
