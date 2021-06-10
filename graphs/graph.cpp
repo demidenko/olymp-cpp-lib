@@ -3,6 +3,7 @@ struct graph {
     using E = conditional_t<sizeof...(T), tuple<size_t,T...>, size_t>;
     graph(size_t n = 0): g(n) {}
     void add_dir_edge(size_t from, size_t to, const T&... args) {
+        assert(from<size() && to<size());
         g[from].emplace_back(to, args...);
     }
     void add_edge(size_t x, size_t y, const T&... args) {
