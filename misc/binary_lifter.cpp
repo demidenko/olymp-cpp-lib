@@ -1,5 +1,5 @@
 struct binary_lifter {
-	const static inline size_t none = -1;
+	constexpr static inline size_t none = -1;
 	
 	binary_lifter(): L(1), jump(1) {}
 	
@@ -44,7 +44,7 @@ struct binary_lifter {
 	}
 	
 	size_t kth_jump(size_t i, size_t k) const {
-		for(size_t h=0; h<L; ++h) if(k>>h&1) i = jump[h][i];
+		for(size_t h=0; k>0 && i!=none; ++h, k>>=1) if(k&1) i = jump[h][i];
 		return i;
 	}
 	
