@@ -1,6 +1,6 @@
-template<typename T, T(*f)(const T&, const T&), bool well_formed = true>
+template<typename T, T f(const T&, const T&), bool well_formed = false>
 struct segt {
-	segt(size_t n, function<T(size_t)> gen) {
+	segt(size_t n, const function<T(size_t)> &gen) {
 		if constexpr(!well_formed) d = n;
 		else for(d=1; d<n; d<<=1);
 		t.assign(d*2, T());
@@ -8,8 +8,8 @@ struct segt {
 		for(size_t i=d;i-->1;) t[i] = f(t[i*2], t[i*2+1]);
 	}
 	
-	void set_value(size_t i, const T& val){
-		t[i+=d] = val;
+	void set_value(size_t i, const T &value){
+		t[i+=d] = value;
 		for(i>>=1; i; i>>=1) t[i] = f(t[i*2], t[i*2+1]);
 	}
 	
