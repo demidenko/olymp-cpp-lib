@@ -1,7 +1,7 @@
 template<typename T, T f(const T&, const T&), bool well_formed = false>
 struct segment_tree {
 	segment_tree(size_t n, const function<T(size_t)> &gen) {
-		if constexpr(!well_formed) d = n;
+		if constexpr (!well_formed) d = n;
 		else for(d=1; d<n; d<<=1);
 		t.assign(d*2, T());
 		for(size_t i=0;i<n;++i) t[i+d] = gen(i);
@@ -22,7 +22,7 @@ struct segment_tree {
 		return f(fl,fr);
 	}
 	
-	conditional_t<well_formed, const T&, T> operator()() const {
+	decltype(auto) operator()() const {
 		if constexpr (well_formed) return t[1];
 		else return operator()(0, d);
 	}
