@@ -19,22 +19,6 @@ struct rsq_assign {
 		return buf;
 	}
 	
-	pair<size_t, T> take(size_t start, T limit) const {
-		limit+=operator()(0,start);
-		size_t v = 1, l = 0, r = d;
-		if(t[v].first<=limit) return {r, limit-t[v].first};
-		for(;v<d;){
-			if(auto a = t[v].second) return {size_t(limit / *a) + l, limit % *a};
-			v<<=1;
-			if(size_t m = (l+r)/2; t[v].first<=limit){
-				limit-=t[v].first;
-				++v;
-				l = m;
-			} else r = m;
-		}
-		return {l, limit};
-	}
-	
 	private:
 	size_t d;
 	vector<pair<T,optional<A>>> t;
