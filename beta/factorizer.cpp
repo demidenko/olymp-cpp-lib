@@ -11,13 +11,13 @@ struct factorizer {
 	}
 	
 	auto factorize(int x) {
-		static pair<int,int> f[11]; int fn=0;
-		while(x>1){
+		static pair<int,int> f[11], *e;
+		for(e = f; x>1; ++e){
 			int p = md[x], q = 0;
 			do ++q, x/=p; while(md[x]==p);
-			f[fn++] = {p, q};
+			*e = {p, q};
 		}
-		return vector<pair<int,int>>(f,f+fn);
+		return vector<pair<int,int>>(f, e);
 	}
 	
 	auto divisors(int x) {
