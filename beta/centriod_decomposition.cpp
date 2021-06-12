@@ -9,6 +9,7 @@ void centriod_decomposition(
 	vector<size_t> par(n), sub(n);
 	
 	auto bfs = [&](size_t start, size_t p) {
+		if(start == -1 || used[start]) return ;
 		par[start] = p;
 		vector q = {start};
 		for(size_t k=0; k<size(q); ++k) {
