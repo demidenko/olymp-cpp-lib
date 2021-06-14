@@ -1,6 +1,6 @@
 template<typename T>
 vector<T> tree_dp_root_each(
-	const auto &g,
+	const graph &g,
 	function<T(size_t)> init,
 	function<T(T, T)> f
 ) {
@@ -16,36 +16,36 @@ vector<T> tree_dp_root_each(
 	};
 	
 	size_t n = size(g);
-	vector<T> result(n), subtree(n);
+	vector<size_t> par(n, -1);
 	vector<bool> used(n);
 	
+	vector<T> result(n), subtree(n);
 	function<void(size_t)> go_sub = [&](size_t v) {
 		used[v] = true;
 		subtree[v] = init(v);
 		for(size_t i : g[v]) if(!used[i]) {
+			par[i] = v;
 			go_sub(i);
 			subtree[v] = f(subtree[v], subtree[i]);
 		}
 	};
 	
-	function<void(size_t,size_t,T)> go = [&](size_t v, size_t p, T up) {
-		used[v] = true;
-		T dv = init(v);
-		result[v] = p==v ? dv : f(dv, up);
+	function<void(size_t,T)> go = [&](size_t v, T up) {
 		vector<T> a;
-		for(size_t i : g[v]) if(i!=p) a.push_back(subtree[i]);
-		exclude(ALL(a), dv);
+		for(size_t i : g[v]) if(i!=par[v]) a.push_back(subtree[i]);
+		exclude(ALL(a), init(v));
 		auto it = begin(a);
-		for(size_t i : g[v]) if(i!=p) {
-			go(i, v, p==v ? *it : f(*it,up));
+		for(size_t i : g[v]) if(i!=par[v]) {
+			go(i, par[v]==-1 ? *it : f(*it,up));
 			++it;
-			result[v] = f(result[v], subtree[i]);
 		}
+		result[v] = par[v]==-1 ? subtree[v] : f(subtree[v], up);
 	};
 	
-	for(size_t i=0;i<n;++i) if(!used[i]) go_sub(i);
-	used.flip();
-	for(size_t i=0;i<n;++i) if(!used[i]) go(i,i,{});
+	for(size_t i=0;i<n;++i) if(!used[i]) {
+		go_sub(i);
+		go(i,{});
+	}
 	
 	return result;
 }
