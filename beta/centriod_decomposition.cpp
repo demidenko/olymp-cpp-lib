@@ -1,6 +1,6 @@
 void centriod_decomposition(
-	const auto &g,
-	const function<void(const graph<>&, size_t, size_t)> &action
+	const graph &g,
+	const function<void(const graph&, size_t, size_t)> &action
 	//use as [](const auto &t, size_t centroid, size_t sizeof_subtree)
 ) {
 	
