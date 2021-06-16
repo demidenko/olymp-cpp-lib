@@ -1,12 +1,13 @@
 struct heavy_light_decomposition {
-	heavy_light_decomposition(const graph &g) {
+	heavy_light_decomposition(const graph &g, size_t root = 0) {
 		size_t n = size(g);
 		par.assign(n, -1);
 		header.assign(n, -1);
-		calc_sz(g, 0);
+		calc_sz(g, root);
 		tin.resize(n);
 		tn = 0;
-		go(g, 0, 0);
+		go(g, root, root);
+		assert(tn == n);
 	}
 	
 	size_t index(size_t v) const { return tin[v]; }
