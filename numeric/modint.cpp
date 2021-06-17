@@ -4,25 +4,25 @@ int inv_mod(int a, int m){
 	return a==1 ? 1 : m-m*int64_t(inv_mod(m%a, a))/a;
 }
 
-struct mint {
-	constexpr inline static int mod = 998'244'353 ;
-	int x;
-	mint(): x(0) {}
-	mint(const auto &val): x(val%mod) { if(x<0) x+=mod; }
-	
-	void operator+=(const mint &b){ x+=b.x; if(x>=mod) x-=mod; }
-	void operator-=(const mint &b){ x-=b.x; if(x<0) x+=mod; }
-	void operator*=(const mint &b){ x = int64_t(x)*b.x %mod; }
-	void operator/=(const mint &b){ x = int64_t(x)*inv_mod(b.x,mod) %mod; }
-	friend mint operator+(mint a, const mint &b){ a+=b; return a; }
-	friend mint operator-(mint a, const mint &b){ a-=b; return a; }
-	friend mint operator*(mint a, const mint &b){ a*=b; return a; }
-	friend mint operator/(mint a, const mint &b){ a/=b; return a; }
-	friend mint operator-(mint a){ if(a.x) a.x = mod - a.x; return a; }
-	friend bool operator==(const mint &a, const mint &b){ return a.x==b.x; }
-	friend bool operator!=(const mint &a, const mint &b){ return a.x!=b.x; }
-	friend ostream& operator<<(ostream &o, const mint &m){ return o<<m.x; }
+template<int mod> struct modint {
+	modint(): x(0) {}
+	modint(const auto &val): x(val%mod) { if(x<0) x+=mod; }
+	void operator+=(const modint &b){ x+=b.x; if(x>=mod) x-=mod; }
+	void operator-=(const modint &b){ x-=b.x; if(x<0) x+=mod; }
+	void operator*=(const modint &b){ x = int64_t(x)*b.x %mod; }
+	void operator/=(const modint &b){ x = int64_t(x)*inv_mod(b.x,mod) %mod; }
+	friend modint operator+(modint a, const modint &b){ a+=b; return a; }
+	friend modint operator-(modint a, const modint &b){ a-=b; return a; }
+	friend modint operator*(modint a, const modint &b){ a*=b; return a; }
+	friend modint operator/(modint a, const modint &b){ a/=b; return a; }
+	friend modint operator-(modint a){ if(a.x) a.x = mod - a.x; return a; }
+	friend bool operator==(const modint &a, const modint &b){ return a.x==b.x; }
+	friend bool operator!=(const modint &a, const modint &b){ return a.x!=b.x; }
+	friend ostream& operator<<(ostream &o, const modint &m){ return o<<m.x; }
+	explicit operator int(){ return x; }
+	private: int x;
 };
+using mint = modint<(int)998244353>;
 
 mint operator""m(unsigned long long x){ return mint(x); }
 
