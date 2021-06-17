@@ -12,14 +12,19 @@ struct heavy_light_decomposition {
 	
 	size_t index(size_t v) const { return tin[v]; }
 	
-	void query_path(size_t x, size_t y, auto proceed_range) const {
+	size_t query_path(size_t x, size_t y, auto process_range) const {
 		if(tin[x] > tin[y]) swap(x, y);
 		for(size_t v; tin[v=header[y]] > tin[x]; y = par[v]) 
-			proceed_range(tin[v], tin[y]+1);
+			process_range(tin[v], tin[y]+1);
 		for(size_t v; (v=header[x]) != header[y]; x = par[v])
-			proceed_range(tin[v], tin[x]+1);
+			process_range(tin[v], tin[x]+1);
 		if(tin[x] > tin[y]) swap(x, y);
-		proceed_range(tin[x], tin[y]+1);
+		process_range(tin[x], tin[y]+1);
+		return x;
+	}
+	
+	size_t lca(size_t x, size_t y) const {
+		return query_path(x, y, [](auto...){});
 	}
 	
 	private:
