@@ -1,12 +1,12 @@
 struct heavy_light_decomposition {
-	heavy_light_decomposition(const graph &g, size_t root = 0) {
+	heavy_light_decomposition(const auto &g, size_t root = 0) {
 		size_t n = size(g);
 		par.assign(n, -1);
 		header.assign(n, -1);
 		calc(g, root);
 		tin.resize(n);
 		tn = 0;
-		go(g, root, root);
+		build(g, root, root);
 		assert(tn == n);
 	}
 	
@@ -32,7 +32,7 @@ struct heavy_light_decomposition {
 	vector<size_t> tin, par, header;
 	size_t tn;
 	
-	size_t calc(const graph &g, size_t v) {
+	size_t calc(const auto &g, size_t v) {
 		size_t mh = 0;
 		for(size_t i : g[v]) if(i!=par[v]) {
 			par[i] = v;
@@ -42,11 +42,11 @@ struct heavy_light_decomposition {
 		return mh + 1;
 	}
 	
-	void go(const graph &g, size_t v, size_t f) {
+	void build(const auto &g, size_t v, size_t f) {
 		tin[v] = tn++;
 		size_t mx = exchange(header[v], f);
 		if(mx == -1) return ;
-		go(g, mx, f);
-		for(size_t i : g[v]) if(i!=par[v] && i!=mx) go(g, i, i);
+		build(g, mx, f);
+		for(size_t i : g[v]) if(i!=par[v] && i!=mx) build(g, i, i);
 	}
 };
