@@ -3,7 +3,7 @@ struct heavy_light_decomposition {
 		size_t n = size(g);
 		par.assign(n, -1);
 		header.assign(n, -1);
-		calc_sz(g, root);
+		calc(g, root);
 		tin.resize(n);
 		tn = 0;
 		go(g, root, root);
@@ -19,8 +19,8 @@ struct heavy_light_decomposition {
 		for(size_t v; (v=header[x]) != header[y]; x = par[v])
 			process_range(tin[v], tin[x]+1);
 		if(tin[x] > tin[y]) swap(x, y);
-        if(size_t l = tin[x]+ignore_lca, r = tin[y]+1; l<r)
-		    process_range(l, r);
+		if(size_t l = tin[x]+ignore_lca, r = tin[y]+1; l<r)
+			process_range(l, r);
 		return x;
 	}
 	
@@ -32,15 +32,14 @@ struct heavy_light_decomposition {
 	vector<size_t> tin, par, header;
 	size_t tn;
 	
-	size_t calc_sz(const graph &g, size_t v) {
-		size_t sz = 1, ms = 0;
+	size_t calc(const graph &g, size_t v) {
+		size_t mh = 0;
 		for(size_t i : g[v]) if(i!=par[v]) {
 			par[i] = v;
-			size_t s = calc_sz(g, i);
-			if(s > ms) ms = s, header[v] = i;
-			sz+=s;
+			size_t h = calc(g, i);
+			if(h > mh) mh = h, header[v] = i;
 		}
-		return sz;
+		return mh + 1;
 	}
 	
 	void go(const graph &g, size_t v, size_t f) {
