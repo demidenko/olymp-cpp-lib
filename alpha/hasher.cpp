@@ -27,15 +27,17 @@ namespace kihash {
 		private: uint64_t x;
 	};
 	
-	hash_t pow(hash_t x, uint64_t n) {
-		hash_t res = 1;
-		for(; n; n>>=1, x*=x) if(n&1) res*=x;
-		return res;
-	}
-	
 	const hash_t X = 309935741 +  
 		int32_t(mt19937(chrono::high_resolution_clock::now().time_since_epoch().count())() >> 2);
 	
+	
+	vector<hash_t> xpow = {1};
+	void expand_xpow(size_t n) {
+		if(size_t pn = size(xpow); pn < n+1) {
+			xpow.resize(n+1);
+			for(size_t i=pn; i<=n; ++i) xpow[i] = xpow[i-1]*X;
+		}
+	}
 	
 	hash_t hash(const string &s) {
 		hash_t h = 0;
@@ -44,36 +46,37 @@ namespace kihash {
 	}
 	
 	struct hash_view {
+		hash_t h;
 		size_t length;
-		hash_t h, px;
-		hash_view(): length(0), h(0), px(1) {}
-		hash_view(char ch): length(1), h(ch), px(X) {}
-		hash_view(const string &s): length(size(s)), h(hash(s)), px(pow(X,length)) {}
+		hash_view(): h(0), length(0) {}
+		hash_view(const hash_t &h, size_t len): h(h), length(len) {}
+		hash_view(char ch): h(ch), length(1) {}
+		hash_view(const string &s): h(hash(s)), length(size(s)) {}
 		void operator+=(const hash_view &a) {
+			h+=a.h*xpow[length];
 			length+=a.length;
-			h+=a.h*px;
-			px*=a.px;
 		}
 		friend hash_view operator+(hash_view a, const hash_view &b) { a+=b; return a; }
 		friend bool operator==(const hash_view &a, const hash_view &b) { return a.h==b.h && a.length==b.length; }
 	};
 	
 	struct hasher {
-		static inline vector<hash_t> px = {1};
-		vector<hash_t> suf;
-		
 		hasher(const string &s) {
 			size_t n = size(s);
+			expand_xpow(n);
 			suf.resize(n+1);
 			for(size_t i=n; i--; ) suf[i] = suf[i+1]*X + s[i];
-			if(size_t pn = size(px); pn < n+1) {
-				px.resize(n+1);
-				for(size_t i=pn; i<=n; ++i) px[i] = px[i-1]*X;
-			}
 		}
 		
 		hash_t substr(size_t pos, size_t n) {
-			return suf[pos] - suf[pos+n]*px[n];
+			return suf[pos] - suf[pos+n]*xpow[n];
 		}
+		
+		hash_view substr_view(size_t pos, size_t n) {
+			return {substr(pos,n), n};
+		}
+		
+		private:
+		vector<hash_t> suf;
 	};
 }
