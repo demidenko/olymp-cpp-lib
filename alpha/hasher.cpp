@@ -1,4 +1,4 @@
-namespace hashing {
+namespace kihash {
 	constexpr uint64_t M = (uint64_t(1)<<61) - 1;
 	
 	uint64_t mul(uint64_t a, uint64_t b) {
@@ -12,7 +12,7 @@ namespace hashing {
 	
 	struct hash_t {
 		hash_t(): x(0) {}
-		hash_t(int32_t val): x(val) { if(x<0) x+=M; }
+		hash_t(int32_t val): x(val<0 ? val+M : val) { }
 		void operator*=(const hash_t &b){ x = mul(x,b.x); }
 		void operator+=(const hash_t &b){ x+=b.x; if(x>=M) x-=M; }
 		void operator-=(const hash_t &b){ if(b.x>x) x+=M-b.x; else x-=b.x; }
@@ -21,17 +21,25 @@ namespace hashing {
 		friend hash_t operator-(hash_t a, const hash_t &b){ a-=b; return a; }
 		friend bool operator==(const hash_t &a, const hash_t &b){ return a.x==b.x; }
 		friend bool operator!=(const hash_t &a, const hash_t &b){ return a.x!=b.x; }
+		friend ostream& operator<<(ostream &o, const hash_t &h){ return o<<h.x; }
 		uint64_t to_uint() { return x; }
 		int64_t to_int() { return x; }
 		private: uint64_t x;
 	};
 	
-	const uint64_t X = 309935741 +  
-		(mt19937(chrono::high_resolution_clock::now().time_since_epoch().count())()>>1);
+	const hash_t X = 309935741 +  
+		int32_t(mt19937(chrono::high_resolution_clock::now().time_since_epoch().count())() >> 2);
+	
+	
+	hash_t hash(const string &s) {
+		hash_t h = 0;
+		for(size_t i=size(s); i--; ) h = h*X + s[i];
+		return h;
+	}
 	
 	struct hasher {
-		vector<hash_t> suf;
 		static inline vector<hash_t> px = {1};
+		vector<hash_t> suf;
 		
 		hasher(const string &s) {
 			size_t n = size(s);
