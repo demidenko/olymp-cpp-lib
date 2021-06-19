@@ -27,6 +27,12 @@ namespace kihash {
 		private: uint64_t x;
 	};
 	
+	hash_t pow(hash_t x, uint64_t n) {
+		hash_t res = 1;
+		for(; n; n>>=1, x*=x) if(n&1) res*=x;
+		return res;
+	}
+	
 	const hash_t X = 309935741 +  
 		int32_t(mt19937(chrono::high_resolution_clock::now().time_since_epoch().count())() >> 2);
 	
@@ -36,6 +42,21 @@ namespace kihash {
 		for(size_t i=size(s); i--; ) h = h*X + s[i];
 		return h;
 	}
+	
+	struct hash_view {
+		size_t length;
+		hash_t h, px;
+		hash_view(): length(0), h(0), px(1) {}
+		hash_view(char ch): length(1), h(ch), px(X) {}
+		hash_view(const string &s): length(size(s)), h(hash(s)), px(pow(X,length)) {}
+		void operator+=(const hash_view &a) {
+			length+=a.length;
+			h+=a.h*px;
+			px*=a.px;
+		}
+		friend hash_view operator+(hash_view a, const hash_view &b) { a+=b; return a; }
+		friend bool operator==(const hash_view &a, const hash_view &b) { return a.h==b.h && a.length==b.length; }
+	};
 	
 	struct hasher {
 		static inline vector<hash_t> px = {1};
