@@ -53,6 +53,7 @@ namespace kihash {
 		hash_view(char ch): h(ch), length(1) {}
 		hash_view(const string &s): h(hash(s)), length(size(s)) {}
 		void operator+=(const hash_view &a) {
+			expand_xpow(length);
 			h+=a.h*xpow[length];
 			length+=a.length;
 		}
