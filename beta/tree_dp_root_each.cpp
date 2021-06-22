@@ -6,7 +6,7 @@ vector<S> tree_dp_root_each(
 ) {
 	size_t n = size(g);
 	vector<S> res(n), up(n), excl(n);
-	vector<typename decay_t<decltype(g)>::E> epar(n);
+	vector<typename decay_t<decltype(g)>::E> epar(n), epar_rev(n);
 	
 	using it = typename vector<size_t>::iterator;
 	function<void(it,it,S)> exclude = [&](it l, it r, const S& val) {
@@ -29,7 +29,7 @@ vector<S> tree_dp_root_each(
 				par[i] = v;
 				epar[i] = edge;
 				q[qr++] = i;
-			}
+			} else epar_rev[v] = edge;
 		}
 	}
 	
@@ -42,8 +42,8 @@ vector<S> tree_dp_root_each(
 		for(size_t i : g[v]) if(i!=par[v]) ar.push_back(i);
 		exclude(ALL(ar), single(v));
 		for(size_t i : g[v]) if(i!=par[v]) {
-			up[i] = par[v]==-1 ? excl[i] : f(excl[i], up[v], epar[v]);
-			res[i] = f(res[i], up[i], epar[i]);
+			up[i] = par[v]==-1 ? excl[i] : f(excl[i], up[v], epar_rev[v]);
+			res[i] = f(res[i], up[i], epar_rev[i]);
 		}
 	}
 	
