@@ -4,54 +4,46 @@ vector<T> tree_dp_root_each(
 	function<T(size_t)> single,
 	function<T(T, T)> f
 ) {
-	using it = typename vector<T>::iterator;
-	function<void(it,it,T)> exclude = [&f,&exclude](it l, it r, const T& val) {
-		if(l==r) return ;
-		if(l+1 == r) { *l = val; return ; }
-		auto m = l + (r-l)/2;
-		T fl = accumulate(l,m,val,f);
-		T fr = accumulate(m,r,val,f);
-		exclude(l, m, fr);
-		exclude(m, r, fl);
-	};
-	
 	size_t n = size(g);
-	vector<bool> used(n);
-	vector<size_t> par(n, -1);
+	vector<T> res(n), up(n), excl(n);
 	
-	vector<T> res(n), up(n);
-	
-	auto calc = [&](const size_t root) {
-		vector<size_t> q = {root};
-		for(size_t k=0; k<size(q); ++k) {
-			size_t v = q[k];
-			used[v] = true;
-			res[v] = single(v);
-			for(size_t i : g[v]) if(!used[i]) {
-				par[i] = v;
-				q.push_back(i);
-			}
-		}
-		
-		for(size_t k=size(q)-1; k>0; --k) {
-			size_t v = q[k];
-			res[par[v]] = f(res[par[v]], res[v]);
-		}
-		
-		for(size_t v : q) {
-			vector<T> a;
-			for(size_t i : g[v]) if(i!=par[v]) a.push_back(res[i]);
-			exclude(ALL(a), single(v));
-			auto it = begin(a);
-			for(size_t i : g[v]) if(i!=par[v]) {
-				up[i] = par[v]==-1 ? *it : f(*it,up[v]);
-				res[i] = f(res[i], up[i]);
-				++it;
-			}
-		}
+	using it = typename vector<size_t>::iterator;
+	function<void(it,it,T)> exclude = [&](it l, it r, const T& val) {
+		if(l==r) return ;
+		if(l+1 == r) { excl[*l] = val; return ; }
+		auto m = l + (r-l)/2;
+		T x = val; for(it i=l; i!=m; ++i) x = f(x, res[*i]);
+		exclude(m, r, x);
+		x = val; for(it i=m; i!=r; ++i) x = f(x, res[*i]);
+		exclude(l, m, x);
 	};
 	
-	for(size_t i=0;i<n;++i) if(!used[i]) calc(i);
+	vector<size_t> par(n, -1), q(n), ar;
+	size_t ql = 0, qr = 0;
+	for(size_t root=0; root<n; ++root) if(par[root]==-1) {
+		for(q[qr++] = root; ql<qr; ++ql) {
+			size_t v = q[ql];
+			res[v] = single(v);
+			for(size_t i : g[v]) if(i!=par[v]) {
+				par[i] = v;
+				q[qr++] = i;
+			}
+		}
+	}
+	
+	for(size_t k=qr; k--;)
+		if(size_t v = q[k], p = par[v]; p!=-1)
+			res[p] = f(res[p], res[v]);
+	
+	for(size_t v : q) {
+		ar.clear();
+		for(size_t i : g[v]) if(i!=par[v]) ar.push_back(i);
+		exclude(ALL(ar), single(v));
+		for(size_t i : g[v]) if(i!=par[v]) {
+			up[i] = par[v]==-1 ? excl[i] : f(excl[i], up[v]);
+			res[i] = f(res[i], up[i]);
+		}
+	}
 	
 	return res;
 }
