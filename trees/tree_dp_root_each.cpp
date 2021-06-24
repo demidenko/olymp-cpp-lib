@@ -1,14 +1,16 @@
-template<typename S>
+template<typename S, class ...T>
 vector<S> tree_dp_root_each(
-	const auto &g,
+	const graph_t<T...> &g,
 	function<S(size_t)> single,
-	auto f //[](S dv, S di, auto &edge) -> S { }
+	auto f //[](S dv, S di, auto &edge) -> S { auto [v, i, ...] = edge }
 ) {
 	size_t n = size(g);
 	vector<S> res(n), up(n);
-	vector<typename decay_t<decltype(g)>::E> epar(n);
 	
-	using it = typename vector<size_t>::iterator;
+	auto expand_edge = [&](size_t v, const auto &t) { return tuple_cat(tuple(v), (tuple<size_t,T...>&&)(edge_t<T...>{t})); };
+	vector<edge_t<size_t,T...>> epar(n);
+	
+	using it = vector<size_t>::iterator;
 	function<void(it,it,S)> exclude = [&](it l, it r, const S& val) {
 		if(l==r) return ;
 		if(l+1 == r) { up[*l] = val; return ; }
@@ -27,7 +29,7 @@ vector<S> tree_dp_root_each(
 			res[v] = single(v);
 			for(auto &edge : g[v]) if(size_t i=edge; i!=par[v]) {
 				par[i] = v;
-				epar[i] = edge;
+				epar[i] = expand_edge(v,edge);
 				q[qr++] = i;
 			}
 		}
@@ -41,7 +43,7 @@ vector<S> tree_dp_root_each(
 		ar.clear();
 		for(auto &edge : g[v]) if(size_t i=edge; i!=par[v]) ar.push_back(i); else {
 			if(par[i]!=-1) up[v] = f(up[v], up[i], epar[i]);
-			res[v] = f(res[v], up[v], epar[v] = edge);
+			res[v] = f(res[v], up[v], epar[v] = expand_edge(v,edge));
 		}
 		exclude(ALL(ar), single(v));
 	}
