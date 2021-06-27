@@ -21,7 +21,7 @@ auto dijkstra(const S &start,
 		}
 	};
 	while(!empty(q)) {
-        tie(dv, v) = move(q.extract(begin(q)).value());
+		tie(dv, v) = move(q.extract(begin(q)).value());
 		gen(v, upd);
 	}
 	return dist;
