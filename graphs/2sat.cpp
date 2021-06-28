@@ -16,7 +16,7 @@ struct sat2 {
 	}
 	optional<vector<bool>> solve() {
 		vector<bool> res(n);
-		auto cp = strong_connected_components(g);
+		auto cp = strong_connected_components(g).second;
 		for(size_t i=0; i<n; ++i){
 			size_t x = cp[i], y = cp[i+n];
 			if(x == y) return nullopt;
