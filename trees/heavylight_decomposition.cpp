@@ -1,13 +1,10 @@
 struct heavy_light_decomposition {
-	heavy_light_decomposition(const auto &g, size_t root = 0) {
-		size_t n = size(g);
-		par.assign(n, -1);
-		header.assign(n, -1);
+	heavy_light_decomposition(const auto &g, size_t root = 0):
+		par(size(g),-1), header(size(g),-1), tin(size(g)), tn(0)
+	{
 		calc(g, root);
-		tin.resize(n);
-		tn = 0;
 		build(g, root, root);
-		assert(tn == n);
+		assert(tn == size(g));
 	}
 	
 	size_t index(size_t v) const { return tin[v]; }
