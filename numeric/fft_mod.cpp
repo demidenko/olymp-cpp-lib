@@ -1,52 +1,56 @@
-namespace FFT{
-	const size_t MAXN = (1 << 19);
-	mint pws[MAXN + 1];
+namespace NTT {
+	constexpr size_t MAXH = 23, MAXN = size_t(1)<<MAXH;
+	mint root[MAXH+1];
 
-	void init_fft(){
-		assert(mod == 998244353);
-		pws[MAXN] = 805775211;
-		for(size_t i = MAXN>>1; i >= 1; i>>=1){
-			pws[i] = pws[i*2] * pws[i*2];
+	bool init_ntt() {
+		static_assert(is_same_v<mint, modint<998244353>>);
+		root[MAXH] = 31;
+		for(size_t i=MAXH-1; i; --i) root[i] = root[i+1]*root[i+1];
+		return true;
+	}
+	
+	template<size_t H = MAXH, size_t step = 1>
+	void ntt(vector<mint> &a, vector<mint> &ans, size_t l, size_t cl) {
+		if constexpr (H==0) ans[l] = a[cl];
+		else {
+			constexpr size_t n = size_t(1)<<H;
+			if(size(a) < n) {
+				ntt<H-1,step>(a, ans, l, cl);
+				return ;
+			}
+			ntt<H-1,step*2>(a, ans, l, cl);
+			ntt<H-1,step*2>(a, ans, l+n/2, cl+step);
+			mint cw = 1, gw = root[H];
+			for(size_t i=l, j=l+n/2; j<l+n; i++, j++) {
+				mint u = ans[i], v = cw*ans[j];
+				ans[i] = u + v;
+				ans[j] = u - v;
+				cw *= gw;
+			}
 		}
 	}
 	
-	void fft(vector<mint> &a, vector<mint> &ans, size_t n, size_t l, size_t cl, size_t step){
-		if (n == 1) { ans[l] = a[cl]; return; }
-		n>>=1;
-		fft(a, ans, n, l, cl, step*2);
-		fft(a, ans, n, l+n, cl+step, step*2);
-		mint cw = 1, gw = pws[n*2];
-		for(size_t i = l; i < l + n; i++){
-			mint u = ans[i], v = cw*ans[i+n];
-			ans[i] = u + v;
-			ans[i+n] = u - v;
-			cw *= gw;
-		}
-	}
-	
-	void fft_inv(vector<mint> &a, vector<mint> &ans, size_t n){
-		fft(a, ans, n, 0, 0, 1);
-		reverse(begin(ans)+1,end(ans));
-		auto div = 1m / n;
+	void ntt_inv(vector<mint> &a, vector<mint> &ans, size_t n) {
+		ntt(a, ans, 0, 0);
+		reverse(begin(ans)+1, end(ans));
+		auto div = mint(1) / n;
 		for(auto &val : ans) val*=div;
 	}
+	
+	vector<mint> convolution(const vector<mint> &a, const vector<mint> &b) {
+		if(size(a) < size(b)) return convolution(b, a);
+		if(empty(b)) return {};
+		size_t n = size(a), m = size(b), d = 1;
+		while(d < n+m-1) d<<=1; assert(d<=MAXN);
+		static bool init_called = NTT::init_ntt();
+		vector<mint> t(d), fa(d), fb(d);
+		copy(begin(b), end(b), begin(t));
+		ntt(t, fb, 0, 0);
+		copy(begin(a), end(a), begin(t));
+		ntt(t, fa, 0, 0);
+		for(size_t i=0; i<d; ++i) fa[i]*=fb[i];
+		ntt_inv(fa, t, d);
+		t.resize(n+m-1);
+		return t;
+	}
 };
-
-
-vector<mint> multiply(const vector<mint> &a, const vector<mint> &b){
-	if(size(a) < size(b)) return multiply(b, a);
-	if(empty(b)) return {};
-	size_t n = size(a), m = size(b), d = 1;
-	while(d<n+m-1) d<<=1; assert(d<=FFT::MAXN);
-	static bool init_called = false;
-	if(!init_called) FFT::init_fft(), init_called = true;
-	vector<mint> t(d), fa(d), fb(d);
-	copy(begin(b),end(b),begin(t));
-	FFT::fft(t, fb, d, 0, 0, 1);
-	copy(begin(a),end(a),begin(t));
-	FFT::fft(t, fa, d, 0, 0, 1);
-	for(size_t i=0;i<d;++i) fa[i]*=fb[i];
-	FFT::fft_inv(fa, t, d);
-	t.resize(n+m-1);
-	return t;
-}
