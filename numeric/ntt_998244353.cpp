@@ -1,40 +1,50 @@
 namespace NTT {
-	constexpr size_t MAXH = 23, MAXN = size_t(1)<<MAXH;
-	mint root[MAXH+1];
-
-	bool init_ntt() {
-		static_assert(is_same_v<mint, modint<998244353>>);
-		root[MAXH] = 31;
-		for(size_t i=MAXH-1; i; --i) root[i] = root[i+1]*root[i+1];
-		return true;
-	}
+	static_assert(is_same_v<mint, modint<998244353>>);
 	
-	template<size_t H = MAXH, size_t step = 1>
-	void ntt(vector<mint> &a, vector<mint> &ans, size_t l, size_t cl) {
-		if constexpr (H==0) ans[l] = a[cl];
-		else {
-			constexpr size_t n = size_t(1)<<H;
-			if(size(a) < n) {
-				ntt<H-1,step>(a, ans, l, cl);
-				return ;
+	namespace {
+		constexpr size_t MAXH = 23, MAXN = size_t(1)<<MAXH;
+		
+		auto make_roots() {
+			array<mint, MAXH+1> r;
+			r[MAXH] = 31;
+			for(size_t i=MAXH; i--; ) r[i] = r[i+1] * r[i+1];
+			return r;
+		}
+		
+		size_t rev(size_t i, size_t H) {
+			const size_t w = sizeof(size_t) * 8;
+			for(size_t k = w, ms = (size_t(1)<<k)-1; k>>=1; ) {
+				ms^=(ms<<k);
+				size_t a = i&(ms<<k), b = i&ms;
+				i = (a>>k)|(b<<k);
 			}
-			ntt<H-1,step*2>(a, ans, l, cl);
-			ntt<H-1,step*2>(a, ans, l+n/2, cl+step);
-			mint cw = 1, gw = root[H];
-			for(size_t i=l, j=l+n/2; j<l+n; i++, j++) {
-				mint u = ans[i], v = cw*ans[j];
-				ans[i] = u + v;
-				ans[j] = u - v;
-				cw *= gw;
+			return i>>(w-H);
+		}
+		
+		void ntt(const vector<mint> &a, vector<mint> &ans) {
+			static const auto roots = make_roots();
+			const size_t n = size(a), H = __lg(n);
+			for(size_t i=0; i<n; ++i) ans[rev(i,H)] = a[i];
+			for(size_t h=1, k=2; h<=H; ++h, k<<=1) {
+				size_t step = n>>h;
+				for(size_t p=0; p<n; p+=k) {
+					mint cw = 1;
+					for(size_t i=0, j=k/2; j<k; ++i, ++j) {
+						mint v = cw*ans[p+j], u = ans[p+i];
+						ans[p+i] = u + v;
+						ans[p+j] = u - v;
+						cw *= roots[h];
+					}
+				}
 			}
 		}
-	}
-	
-	void ntt_inv(vector<mint> &a, vector<mint> &ans, size_t n) {
-		ntt(a, ans, 0, 0);
-		reverse(begin(ans)+1, end(ans));
-		auto div = mint(1) / n;
-		for(auto &val : ans) val*=div;
+		
+		void ntt_inv(const vector<mint> &a, vector<mint> &ans) {
+			ntt(a, ans);
+			reverse(begin(ans)+1, end(ans));
+			auto div = 1 / mint(size(a));
+			for(auto &val : ans) val*=div;
+		}
 	}
 	
 	vector<mint> convolution(const vector<mint> &a, const vector<mint> &b) {
@@ -42,15 +52,14 @@ namespace NTT {
 		if(empty(b)) return {};
 		size_t n = size(a), m = size(b), d = 1;
 		while(d < n+m-1) d<<=1; assert(d<=MAXN);
-		static bool init_called = NTT::init_ntt();
 		vector<mint> t(d), fa(d), fb(d);
 		copy(begin(b), end(b), begin(t));
-		ntt(t, fb, 0, 0);
+		ntt(t, fb);
 		copy(begin(a), end(a), begin(t));
-		ntt(t, fa, 0, 0);
+		ntt(t, fa);
 		for(size_t i=0; i<d; ++i) fa[i]*=fb[i];
-		ntt_inv(fa, t, d);
+		ntt_inv(fa, t);
 		t.resize(n+m-1);
 		return t;
 	}
-};
+}
