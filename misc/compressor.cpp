@@ -1,18 +1,20 @@
-template<typename T>
+template<class T>
 struct compressor {
-	compressor(const vector<T> &values): x(values) {
-		sort(ALL(x));
-		x.resize(unique(ALL(x))-begin(x));
+	compressor(){}
+	compressor(const vector<T> &values): v(values) { make(); }
+	void make() {
+		sort(begin(v),end(v));
+		v.resize(unique(begin(v),end(v))-begin(v));
 	}
-	size_t index(const T &value) {
-		size_t i = lb(value);
-		assert(x.at(i) == value);
+	void add(const T &x) { v.push_back(x); }
+	size_t lb(const T &x) const { return lower_bound(begin(v),end(v),x) - begin(v); }
+	size_t ub(const T &x) const { return upper_bound(begin(v),end(v),x) - begin(v); }
+	size_t index(const T &x) const {
+		size_t i = lb(x);
+		assert(v.at(i) == x);
 		return i;
 	}
-	size_t greater(const T &value) { return ub(value); }
-	size_t greater_equal(const T &value) { return lb(value); }
-	size_t size() const { return x.size(); }
-	private: vector<T> x;
-	size_t lb(const T &value) { return lower_bound(ALL(x),value) - begin(x); }
-	size_t ub(const T &value) { return upper_bound(ALL(x),value) - begin(x); }
+	auto range(const T &from, const T &to) const { return pair(lb(from),lb(to)); }
+	size_t size() const { return v.size(); }
+	private: vector<T> v;
 };
