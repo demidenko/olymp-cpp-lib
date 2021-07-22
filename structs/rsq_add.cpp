@@ -1,10 +1,10 @@
-template<typename T>
+template<class T>
 struct rsq_add {
-	rsq_add(size_t sz = 0): f(sz) {}
+	explicit rsq_add(size_t sz = 0): f(sz) {}
 	
 	rsq_add(const vector<auto> &vals): f(size(vals)) {
 		for(size_t i=0; i<size(vals); ++i) {
-			T x = i ? T(vals[i]) - T(vals[i-1]) : vals[i];
+			T x = vals[i]; if(i) x-=T(vals[i-1]);
 			f[i].first+=x;
 			f[i].second+=x*T(i);
 			if(size_t j = i|(i+1); j<size(f)) {
@@ -38,7 +38,7 @@ struct rsq_add {
 	}
 	
 	T sum_until(size_t pos) const {
-		T res = T();
+		T res{};
 		for(size_t i=pos; i-->0; i&=i+1) 
 			res += f[i].first*T(pos) - f[i].second;
 		return res;
