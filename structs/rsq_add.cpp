@@ -31,16 +31,15 @@ struct rsq_add {
 	vector<pair<T,T>> f;
 	
 	void add_suf(size_t pos, const T &val) {
-		for(size_t i=pos; i<size(f); i|=i+1) {
-			f[i].first+=val;
-			f[i].second+=val*T(pos);
-		}
+		T m = val * T(pos);
+		for(size_t i=pos; i<size(f); i|=i+1) 
+			f[i].first+=val, f[i].second+=m;
 	}
 	
 	T sum_until(size_t pos) const {
-		T res{};
+		T a{}, b{};
 		for(size_t i=pos; i-->0; i&=i+1) 
-			res += f[i].first*T(pos) - f[i].second;
-		return res;
+			a+=f[i].first, b+=f[i].second;
+		return a*T(pos) - b;
 	}
 };
