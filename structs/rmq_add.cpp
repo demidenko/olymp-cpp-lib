@@ -2,7 +2,7 @@ template<class T, const T& f(const T&, const T&) = std::min<T> >
 struct rmq_add {
 	constexpr static T neutral = [](T m,T M){return f(m,M)==m?M:m;}(numeric_limits<T>::min(),numeric_limits<T>::max());
 	
-	rmq_add(size_t sz = 0, const T &val = neutral) {
+	explicit rmq_add(size_t sz = 0, const T &val = neutral) {
 		for(d=1; d<sz; d<<=1);
 		t.assign(d<<1, {val, {}});
 	}
