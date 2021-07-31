@@ -1,10 +1,10 @@
-template<typename T, const T& f(const T&, const T&) = std::min<T> >
+template<class T, const T& f(const T&, const T&) = std::min<T> >
 struct rmq_add {
 	constexpr static T neutral = [](T m,T M){return f(m,M)==m?M:m;}(numeric_limits<T>::min(),numeric_limits<T>::max());
 	
-	rmq_add(size_t sz = 0) {
-		for(d=1;d<sz;d<<=1);
-		t.assign(d*2, pair(neutral, T()));
+	rmq_add(size_t sz = 0, const T &val = neutral) {
+		for(d=1; d<sz; d<<=1);
+		t.assign(d<<1, {val, {}});
 	}
 	
 	rmq_add(const vector<auto> &vals): rmq_add(size(vals)) {
@@ -12,7 +12,7 @@ struct rmq_add {
 		_build();
 	}
 	
-	void add(size_t l, size_t r, const T& val) {
+	void add(size_t l, size_t r, const T &val) {
 		if(r>d) r = d;
 		if(l<r) _add(l,r,val,0,d,1);
 	}
@@ -30,7 +30,7 @@ struct rmq_add {
 	}
 	
 	void set_value(size_t i, const T &val) {
-		T up = T();
+		T up{};
 		for(size_t v=(i+d)>>1; v>0; v>>=1) up+=t[v].second;
 		t[i+d].first = t[i+d].second = val-up;
 		for(size_t v=(i+d)>>1; v>0; v>>=1) _build_node(v);
