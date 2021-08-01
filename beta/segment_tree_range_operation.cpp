@@ -1,18 +1,20 @@
-template<typename T, typename O>
+template<class T, class O>
 struct segment_tree {
-	segment_tree(size_t n, const function<T(size_t)> &gen) {
+	segment_tree(size_t n, function<T(size_t)> gen) {
 		for(d=1; d<n; d<<=1);
-		t.assign(d*2, {T(),nullopt});
+		t.assign(d*2, {{}, nullopt});
 		for(size_t i=0;i<n;++i) t[i+d].first = gen(i);
 		for(size_t i=d;i-->1;) t[i].first = T(t[i*2].first, t[i*2+1].first);
 	}
 	
 	void apply(size_t l, size_t r, const O &operation) {
+		if(r>d) r = d;
 		if(l<r) apply(l, r, operation, 0, d, 1);
 	}
 	
 	T operator()(size_t l, size_t r) {
-		if(l>=r) return T();
+		if(r>d) r = d;
+		if(l>=r) return {};
 		return query(l, r, 0, d, 1);
 	}
 	
@@ -54,7 +56,17 @@ struct segment_tree {
 		size_t m = (l+r)>>1;
 		if(j<=m) return query(i, j, l, m, v*2);
 		if(i>=m) return query(i, j, m, r, v*2+1);
-		return T(query(i,m,l,m,v*2),query(m,j,m,r,v*2+1));
+		return T(query(i,m,l,m,v*2), query(m,j,m,r,v*2+1));
 	}
-	
 };
+/*
+implement:
+struct operation {
+	operation(const operation &first, const operation &second)
+};
+struct node {
+	node()
+	node(const node &l, const node &r)
+	node(const node &v, const operation &o, size_t len)
+};
+*/
