@@ -25,15 +25,14 @@ struct rmq_add {
 	T operator()() const { return t[1].first; }
 	T operator[](size_t i) const {
 		T result = t[i+=d].first;
-		for(i>>=1; i; i>>=1) result+=t[i].second;
+		while(i>>=1) result+=t[i].second;
 		return result;
 	}
 	
-	void set_value(size_t i, const T &val) {
-		T up{};
-		for(size_t v=(i+d)>>1; v>0; v>>=1) up+=t[v].second;
-		t[i+d].first = t[i+d].second = val-up;
-		for(size_t v=(i+d)>>1; v>0; v>>=1) _build_node(v);
+	void set_value(size_t i, T val) {
+		for(size_t v = i+d; v>>=1; ) val-=t[v].second;
+		t[i+d].first = t[i+d].second = val;
+		for(size_t v = i+d; v>>=1; ) _build_node(v);
 	}
 	
 	private:
