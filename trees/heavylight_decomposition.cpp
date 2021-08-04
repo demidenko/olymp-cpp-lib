@@ -24,7 +24,7 @@ struct heavy_light_decomposition {
 	size_t lca(size_t x, size_t y) const { return query_path(x, y, [](...){}); }
 	
 	private:
-	vector<size_t> tin, par, header;
+	vector<size_t> par, header, tin;
 	size_t tn;
 	
 	size_t calc(const auto &g, size_t v) {

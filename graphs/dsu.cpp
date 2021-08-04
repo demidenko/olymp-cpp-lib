@@ -1,5 +1,5 @@
 struct dsu {
-	explicit dsu(size_t n = 0): sz(n,1), p(n) { iota(begin(p),end(p),0); }
+	explicit dsu(size_t n = 0): p(n), sz(n,1) { iota(begin(p),end(p),0); }
 	size_t get(size_t i) {
 		size_t v = i;
 		while(v!=p[v]) v = p[v];
