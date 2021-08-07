@@ -1,39 +1,59 @@
-auto parallel_binary_search(size_t qn, size_t n, auto action) {
+auto parallel_binary_search(size_t q, size_t n, auto action) {
 	using ask_type = function<bool(size_t)>;
 	struct holder {
-		size_t qn, n, current_version;
 		vector<size_t> result;
 		vector<tuple<size_t,size_t,size_t>> ranges;
-		holder(size_t qn, size_t n): qn(qn), n(n), result(qn), ranges(qn) {
-			for(size_t i=0; i<qn; ++i) ranges[i] = {0, n+1, i};
+		holder(size_t q, size_t n): result(q), ranges(q), q(q), n(n) {
+			for(size_t i=0; i<q; ++i) ranges[i] = {0, n+1, i};
 		}
-		ask_type ask;
-		typename decltype(ranges)::iterator iter;
-		void reset() {
+		void set_ask(ask_type f) {
+			ask = f;
+			iter = begin(ranges);
+			current_version = 0;
+			calc();
+		}
+		void finish() {
+			assert(iter == end(ranges));
+			assert(current_version == n);
 			size_t sz = 0;
 			for(const auto &[l, r, qi] : ranges) {
 				if(l < r) ranges[sz++] = {l, r, qi};
 				else result[qi] = r;
 			}
 			ranges.resize(sz);
-			sort(begin(ranges),end(ranges),[](const auto &a, const auto &b){ return get<0>(a) < get<0>(b); });
-			iter = begin(ranges);
-			current_version = 0;
-			calc();
 		}
 		void commit() {
 			current_version++;
 			calc();
 		}
+		private: 
+		size_t q, n, current_version;
+		ask_type ask;
+		typename decltype(ranges)::iterator iter;
 		void calc() {
 			assert(current_version <= n);
-			for(; iter != end(ranges); ++iter) {
-				auto &[l, r, qi] = *iter;
-				size_t m = (l + r) >> 1;
-				assert(m >= current_version);
-				if(m > current_version) break;
-				if(ask(qi)) r = m; else l = m+1;
+			if(iter == end(ranges)) return ;
+			size_t m = (get<0>(*iter) + get<1>(*iter)) >> 1;
+			assert(m >= current_version);
+			if(m > current_version) return ;
+			auto jter = iter; 
+			while(jter!=end(ranges) && get<0>(*iter) == get<0>(*jter)) ++jter;
+			
+			auto rter = jter--;
+			while(iter <= jter) {
+				size_t qi = get<2>(*iter), start_qi = qi;
+				do {
+					if(ask(qi)) {
+						swap(get<2>(*iter), qi);
+						get<1>(*iter++) = m;
+					} else {
+						swap(get<2>(*jter), qi);
+						get<0>(*jter--) = m+1;
+					}
+				} while(qi != start_qi);
 			}
+			
+			iter = rter;
 		}
 	};
 	
@@ -43,17 +63,17 @@ auto parallel_binary_search(size_t qn, size_t n, auto action) {
 		private: holder &h;
 		struct subhelper {
 			subhelper(holder &h): h(h) {}
-			void operator=(ask_type f) {
-				h.ask = f;
-				h.reset();
-			}
+			void operator=(ask_type f) { h.set_ask(f); }
 			private: holder &h;
 		};
 		public: subhelper ask;
 	};
 	
-	holder h(qn, n);
-	while(!empty(h.ranges)) action(helper{h});
+	holder h(q, n);
+	while(!empty(h.ranges)) {
+		action(helper{h});
+		h.finish();
+	}
 	
 	return h.result;
 }
