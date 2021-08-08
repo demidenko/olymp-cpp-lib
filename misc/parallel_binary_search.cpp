@@ -36,23 +36,20 @@ auto parallel_binary_search(size_t q, size_t n, auto action) {
 			size_t m = (get<0>(*iter) + get<1>(*iter)) >> 1;
 			assert(m >= current_version);
 			if(m > current_version) return ;
-			auto jter = iter; 
-			while(jter!=end(ranges) && get<0>(*iter) == get<0>(*jter)) ++jter;
-			
-			auto rter = jter--;
-			while(iter <= jter) {
+			auto rter = iter; 
+			while(rter!=end(ranges) && get<0>(*iter) == get<0>(*rter)) ++rter;
+			for(auto jter = rter; iter != jter; ) {
 				size_t qi = get<2>(*iter), start_qi = qi;
 				do {
 					if(ask(qi)) {
 						swap(get<2>(*iter), qi);
 						get<1>(*iter++) = m;
 					} else {
-						swap(get<2>(*jter), qi);
-						get<0>(*jter--) = m+1;
+						swap(get<2>(*--jter), qi);
+						get<0>(*jter) = m+1;
 					}
 				} while(qi != start_qi);
 			}
-			
 			iter = rter;
 		}
 	};
