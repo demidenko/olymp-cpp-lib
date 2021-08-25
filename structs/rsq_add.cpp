@@ -25,7 +25,7 @@ struct rsq_add {
 		return sum_until(r) - sum_until(l);
 	}
 	
-	T operator[](size_t i) const { return operator()(i,i+1); }
+	inline T operator[](size_t i) const { return sum_until(i+1) - sum_until(i); }
 	
 	private:
 	vector<pair<T,T>> f;
@@ -38,7 +38,7 @@ struct rsq_add {
 	
 	T sum_until(size_t pos) const {
 		T a{}, b{};
-		for(size_t i=pos; i-->0; i&=i+1) 
+		for(size_t i=pos; i--; i&=i+1) 
 			a+=f[i].first, b+=f[i].second;
 		return a*T(pos) - b;
 	}
