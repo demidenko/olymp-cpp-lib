@@ -1,3 +1,4 @@
+template<bool heavy_by_size = true>
 struct heavy_light_decomposition {
 	heavy_light_decomposition(const auto &g, size_t root = 0):
 		par(size(g),-1), header(size(g),-1), tin(size(g)), tn(0)
@@ -28,13 +29,15 @@ struct heavy_light_decomposition {
 	size_t tn;
 	
 	size_t calc(const auto &g, size_t v) {
-		size_t mh = 0;
+		size_t mx = 0, sz = 1;
 		for(size_t i : g[v]) if(i!=par[v]) {
 			par[i] = v;
-			size_t h = calc(g, i);
-			if(h > mh) mh = h, header[v] = i;
+			size_t x = calc(g, i);
+			if(x > mx) mx = x, header[v] = i;
+			if constexpr (heavy_by_size) sz += x;
 		}
-		return mh + 1;
+		if constexpr (heavy_by_size) return sz;
+		else return mx + 1;
 	}
 	
 	void build(const auto &g, size_t v, size_t f) {
