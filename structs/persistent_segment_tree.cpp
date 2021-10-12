@@ -7,7 +7,7 @@ struct persistent_segment_tree {
 		node(node *l, node *r): l(l), r(r), value(l->value,r->value) {}
 	};
 	
-	T operator()(size_t l, size_t r) { return calc(root, sz, l, r); };
+	T operator()(size_t l, size_t r) { return l < r ? calc(root, sz, l, r) : T{}; };
 	persistent_segment_tree set_value(size_t i, const T &value) { return {set_value(root, sz, i, value), sz}; }
 	
 	persistent_segment_tree(const vector<auto> &values): root(build(begin(values),end(values))), sz(size(values)) {}
