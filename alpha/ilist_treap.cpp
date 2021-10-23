@@ -17,56 +17,54 @@ struct ilist_treap {
 		~node() { if(value != nullptr) delete value; }
 	};
 	
-	struct iterator: public std::iterator<std::random_access_iterator_tag, T> {
+	template<class V>
+	struct node_iterator: public std::iterator<std::random_access_iterator_tag, V, size_t> {
 		friend ilist_treap;
 		private: node *t;
 		public:
-		iterator(node *ptr = nullptr): t(ptr) { }
-		T& operator*() { return *t->value; }
-		bool operator==(const iterator& it) { return t == it.t; }
-		bool operator!=(const iterator& it) { return t != it.t; }
+		node_iterator(node *ptr = nullptr): t(ptr) { }
+		V& operator*() { return *t->value; }
+		bool operator==(const node_iterator &it) { return t == it.t; }
+		bool operator!=(const node_iterator &it) { return t != it.t; }
 		
-		size_t operator-(const iterator &it) const {
+		size_t operator-(const node_iterator &it) const {
 			return get_pos(t) - get_pos(it.t);
 		}
 		
-		iterator& operator++() {
-			if(t->r) t = leftmost(t->r);
-			else t = right_parent(t);
+		node_iterator& operator++() {
+			t = t->r ? leftmost(t->r) : right_parent(t);
 			return *this;
 		}
 		
-		iterator& operator--() {
-			if(t->l) t = rightmost(t->l);
-			else t = left_parent(t);
+		node_iterator& operator--() {
+			t = t->l ? rightmost(t->l) : left_parent(t);
 			return *this;
 		}
 		
-		iterator& operator+=(size_t n) {
-			while(n--) {
-				if(size_t sr = sz(t->r); sr>n) {
+		node_iterator& operator+=(size_t n) {
+			for(; n--; t = right_parent(t))
+				if(size_t sr = sz(t->r); n < sr) {
 					t = nth(t->r, n);
 					break ;
 				} else n-=sr;
-				t = right_parent(t);
-			}
 			return *this;
 		}
 		
-		iterator operator-=(size_t n) {
-			while(n--) {
-				if(size_t sl = sz(t->l); sl>n) {
+		node_iterator operator-=(size_t n) {
+			for(; n--; t = left_parent(t))
+				if(size_t sl = sz(t->l); n < sl) {
 					t = nth(t->l, sl-n-1);
 					break ;
 				} else n-=sl;
-				t = left_parent(t);
-			}
 			return *this;
 		}
 		
-		iterator operator+(size_t n) const { return iterator(t)+=n; }
-		iterator operator-(size_t n) const { return iterator(t)-=n; }
+		node_iterator operator+(size_t n) const { return node_iterator(t)+=n; }
+		node_iterator operator-(size_t n) const { return node_iterator(t)-=n; }
 	};
+	
+	using iterator = node_iterator<T>;
+	using const_iterator = node_iterator<const T>;
 	
 	
 	ilist_treap() {
@@ -94,8 +92,11 @@ struct ilist_treap {
 	}
 	
 	size_t size() const { return sz(root) - 1; }
-	iterator begin() const { return iterator(leftmost(root)); }
-	iterator end() const { return __end; }
+	
+	iterator begin() { return leftmost(root); }
+	iterator end() { return __end; }
+	const_iterator begin() const { return leftmost(root); }
+	const_iterator end() const { return __end; }
 	
 	void clear() {
 		clear(split(__end).first);
@@ -104,16 +105,13 @@ struct ilist_treap {
 	
 	~ilist_treap() { clear(root); }
 	
-	iterator at(size_t pos) {
-		return iterator(nth(root, pos));
-	}
+	iterator at(size_t pos) { return nth(root, pos); }
+	const_iterator at(size_t pos) const { return nth(root, pos); }
 	
-	T& operator[](size_t pos) {
-		assert(pos < size());
-		return *at(pos);
-	}
+	T& operator[](size_t pos) { return *at(pos); }
+	const T& operator[](size_t pos) const { return *at(pos); }
 	
-	void push_back(const T &x) { insert(__end, x); return ; }
+	void push_back(const T &x) { insert(__end, x); }
 	
 	iterator insert(iterator it, const T &x) {
 		return insert(it, new node(x));
@@ -166,30 +164,28 @@ struct ilist_treap {
 	}
 	
 	iterator insert_one(node *s, node *v) {
-		if(s->priority < v->priority) {
-			node *t = s;
+		if(node *t = s; t->priority < v->priority) {
 			while(t->p && t->p->priority < v->priority) t = t->p;
 			if(node *p = t->p; p == nullptr) root = v;
 			else ref_in_parent(t) = v, v->p = p, t->p = nullptr;
-			tie(v->l, v->r) = split(s);
+			auto [sl, sr] = split(s);
+			set_left(v, sl);
+			set_right(v, sr);
 		} else 
 		if(s->l == nullptr) s->l = v, v->p = s;
 		else {
-			for(node *t = s->l; ; t = t->r){
-				if(t->r == nullptr || t->r->priority < v->priority) {
-					if(t->r) v->l = t->r, t->r->p = v;
-					t->r = v;
-					v->p = t;
-					break ;
-				}
-			}
+			for(t = s->l; t->r && t->r->priority > v->priority; t = t->r) ;
+			set_left(v, t->r);
+			set_right(t, v);
 		}
-		for(node *t = v; t; t = t->p) upd(t);
+		for(node *t = v; t; t = t->p) upd_sz(t);
 		return iterator(v);
 	}
 	
 	static inline size_t sz(node *t) { return t ? t->sz : 0; }
 	static inline node*& ref_in_parent(node *t) { return t->p->l == t ? t->p->l : t->p->r; }
+	static inline void set_left(node *v, node *to) { v->l = to; if(to) to->p = v; }
+	static inline void set_right(node *v, node *to) { v->r = to; if(to) to->p = v; }
 	static void upd(node *t) {
 		if(t == nullptr) return ;
 		t->sz = 1;
@@ -260,12 +256,12 @@ struct ilist_treap {
 			bool cur = s->p->l == s;
 			s = s->p;
 			if(f != cur) {
-				if(cur) s->l = r, l->p = nullptr;
-				else s->r = l, r->p = nullptr;
+				if(cur) set_left(s, r), l->p = nullptr;
+				else set_right(s, l), r->p = nullptr;
 				f = cur;
 			} 
 			if(cur) r = s; else l = s;
-			upd(s);
+			upd_sz(s);
 		}
 		return {l, r};
 	}
