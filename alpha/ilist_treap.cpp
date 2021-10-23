@@ -55,10 +55,10 @@ struct ilist_treap {
 		
 		iterator operator-=(size_t n) {
 			while(n--) {
-				if(size_t sr = sz(t->l); sr>n) {
-					t = nth(t->l, sr-n-1);
+				if(size_t sl = sz(t->l); sl>n) {
+					t = nth(t->l, sl-n-1);
 					break ;
-				} else n-=sr;
+				} else n-=sl;
 				t = left_parent(t);
 			}
 			return *this;
@@ -73,8 +73,8 @@ struct ilist_treap {
 		root = __end = new node();
 	}
 	
-	ilist_treap(size_t n, const T &value = {}): ilist_treap() {
-		for(; n>0; --n) push_back(value);
+	explicit ilist_treap(size_t n, const T &value = {}): ilist_treap() {
+		while(n--) push_back(value);
 	}
 	
 	ilist_treap(std::initializer_list<T> values): ilist_treap() { 
@@ -85,12 +85,7 @@ struct ilist_treap {
 	
 	ilist_treap(ilist_treap &&a) = default ;
 	
-	ilist_treap& operator=(const ilist_treap &a) {
-		clear();
-		root = copy(a.root);
-		__end = rightmost(root);
-		return *this;
-	}
+	ilist_treap& operator=(const ilist_treap &a) = delete ;
 	
 	ilist_treap& operator=(ilist_treap &&a) {
 		root = exchange(a.root, nullptr);
@@ -103,38 +98,54 @@ struct ilist_treap {
 	iterator end() const { return __end; }
 	
 	void clear() {
-		clear(split(root, __end).first);
+		clear(split(__end).first);
 		root = __end;
 	}
 	
 	~ilist_treap() { clear(root); }
 	
-	iterator at(size_t pos) const {
+	iterator at(size_t pos) {
 		return iterator(nth(root, pos));
 	}
 	
-	T& operator[](size_t pos) const {
+	T& operator[](size_t pos) {
 		assert(pos < size());
 		return *at(pos);
 	}
+	
+	void push_back(const T &x) { insert(__end, x); return ; }
 	
 	iterator insert(iterator it, const T &x) {
 		return insert(it, new node(x));
 	}
 	
-	void push_back(const T &x) { insert(__end, x); }
-	
-	iterator insert(iterator it, ilist_treap &&a) {
-		auto [v, aend] = split(a.root, a.__end);
+	iterator insert(iterator pos, ilist_treap &&a) {
+		auto [v, aend] = split(a.__end);
 		a.root = aend;
-		return insert(it, v);
+		return insert(pos, v);
+	}
+	
+	iterator insert(iterator pos, iterator it) {
+		return insert(pos, it.t);
 	}
 	
 	ilist_treap erase(iterator first, iterator last) {
-		auto [l, suf] = split(root, first.t);
-		auto [mid, r] = split(suf, last.t);
+		auto [l, suf] = split(first.t);
+		auto [mid, r] = split(last.t);
 		merge(l, r, root);
 		return ilist_treap(mid);
+	}
+	
+	iterator erase(iterator it) {
+		node *t = it.t, *p = t->p;
+		assert(t != __end);
+		node *&target = p ? ref_in_parent(t) : root;
+		merge(t->l, t->r, target);
+		if(target) target->p = p;
+		for(node *v = p; v; v = v->p) upd_sz(v);
+		t->p = t->l = t->r = nullptr;
+		t->sz = 1;
+		return iterator(t);
 	}
 	
 	
@@ -146,19 +157,47 @@ struct ilist_treap {
 	}
 	
 	iterator insert(iterator it, node *v) {
+		if(sz(v) == 1) return insert_one(it.t, v);
 		auto res = iterator(leftmost(v));
-		auto [l, r] = split(root, it.t);
-		merge(l, v, l);
+		auto [l, r] = split(it.t);
+		if(sz(l) < sz(r)) merge(l, v, l); else merge(v, r, r);
 		merge(l, r, root);
 		return res;
 	}
 	
+	iterator insert_one(node *s, node *v) {
+		if(s->priority < v->priority) {
+			node *t = s;
+			while(t->p && t->p->priority < v->priority) t = t->p;
+			if(node *p = t->p; p == nullptr) root = v;
+			else ref_in_parent(t) = v, v->p = p, t->p = nullptr;
+			tie(v->l, v->r) = split(s);
+		} else 
+		if(s->l == nullptr) s->l = v, v->p = s;
+		else {
+			for(node *t = s->l; ; t = t->r){
+				if(t->r == nullptr || t->r->priority < v->priority) {
+					if(t->r) v->l = t->r, t->r->p = v;
+					t->r = v;
+					v->p = t;
+					break ;
+				}
+			}
+		}
+		for(node *t = v; t; t = t->p) upd(t);
+		return iterator(v);
+	}
+	
 	static inline size_t sz(node *t) { return t ? t->sz : 0; }
+	static inline node*& ref_in_parent(node *t) { return t->p->l == t ? t->p->l : t->p->r; }
 	static void upd(node *t) {
 		if(t == nullptr) return ;
 		t->sz = 1;
 		if(t->l) t->l->p = t, t->sz += t->l->sz;
 		if(t->r) t->r->p = t, t->sz += t->r->sz;
+	}
+	static inline void upd_sz(node *t) {
+		if(t) t->sz = (t->l ? t->l->sz : 0) + (t->r ? t->r->sz : 0) + 1;
 	}
 	
 	static inline node* leftmost(node *t) {
@@ -169,11 +208,11 @@ struct ilist_treap {
 		while(t->r) t = t->r;
 		return t;
 	}
-	static node* left_parent(node *t) {
+	static inline node* left_parent(node *t) {
 		while(t->p->l == t) t = t->p;
 		return t->p;
 	}
-	static node* right_parent(node *t) {
+	static inline node* right_parent(node *t) {
 		while(t->p->r == t) t = t->p;
 		return t->p;
 	}
@@ -202,21 +241,21 @@ struct ilist_treap {
 		if(r == nullptr) t = l; else {
 			if(l->priority > r->priority) {
 				merge(l->r, r, l->r);
-				t = l;
+				l->r->p = t = l;
 			} else {
 				merge(l, r->l, r->l);
-				t = r;
+				r->l->p = t = r;
 			}
-			upd(t);
+			upd_sz(t);
 		}
 	}
 	
-	//split *t by *s such right starts with *s
-	static pair<node*,node*> split(node *t, node *s) {
+	//split by *s such right starts with *s
+	static pair<node*,node*> split(node *s) {
 		assert(s!=nullptr);
 		node *l = s->l, *r = s;
 		if(s->l) s->l->p = nullptr, s->l = nullptr;
-		upd(r);
+		upd_sz(r);
 		for(bool f = true; s->p; ) {
 			bool cur = s->p->l == s;
 			s = s->p;
@@ -236,14 +275,5 @@ struct ilist_treap {
 		clear(v->l);
 		clear(v->r);
 		delete v;
-	}
-	
-	static node* copy(node *v) {
-		if(v == nullptr) return nullptr;
-		node *res = v->value ? new node(*v->value) : new node();
-		res->l = copy(v->l);
-		res->r = copy(v->r);
-		upd(res);
-		return res;
 	}
 };
