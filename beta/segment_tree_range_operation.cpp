@@ -5,14 +5,13 @@ struct segment_tree {
 	}
 	
 	void apply(size_t l, size_t r, const O &operation) {
-		if(r>d) r = d;
-		if(l<r) apply(l, r, operation, 0, d, 1);
+		if(r > d) r = d;
+		if(l < r) apply(l, r, operation, 0, d, 1);
 	}
 	
 	T operator()(size_t l, size_t r) {
-		if(r>d) r = d;
-		if(l>=r) return {};
-		return query(l, r, 0, d, 1);
+		if(r > d) r = d;
+		return l < r ? query(l, r, 0, d, 1) : T{};
 	}
 	
 	const T& operator()() const { return t[1].first; }
@@ -29,8 +28,8 @@ struct segment_tree {
 	
 	void push(size_t v, size_t length) {
 		if(auto &op = t[v].second) {
-			size_t sl = length / 2;
-			auto [opl, opr] = op->split(sl, length - sl);
+			size_t sl = length >> 1;
+			auto&& [opl, opr] = op->split(sl, length - sl);
 			cover(v+1, opl, sl);
 			cover(v+sl*2, opr, length - sl);
 			op.reset();
@@ -38,15 +37,15 @@ struct segment_tree {
 	}
 	
 	void apply(size_t i, size_t j, const O &operation, size_t l, size_t r, size_t v) {
-		if(i==l && j==r) {
+		if(i == l && j == r) {
 			cover(v, operation, r-l);
 			return ;
 		}
 		push(v, r-l);
-		size_t m = (l+r)>>1, vr = v + (m-l)*2;
-		if(j<=m) apply(i, j, operation, l, m, v+1); else
-		if(i>=m) apply(i, j, operation, m, r, vr); else {
-			auto [opl, opr] = operation.split(m-i, j-m);
+		size_t m = (l+r) >> 1, vr = v + (m-l)*2;
+		if(j <= m) apply(i, j, operation, l, m, v+1); else
+		if(i >= m) apply(i, j, operation, m, r, vr); else {
+			auto&& [opl, opr] = operation.split(m-i, j-m);
 			apply(i, m, opl, l, m, v+1);
 			apply(m, j, opr, m, r, vr);
 		}
@@ -54,11 +53,11 @@ struct segment_tree {
 	}
 	
 	T query(size_t i, size_t j, size_t l, size_t r, size_t v) {
-		if(i==l && j==r) return t[v].first;
+		if(i == l && j == r) return t[v].first;
 		push(v, r-l);
-		size_t m = (l+r)>>1, vr = v + (m-l)*2;
-		if(j<=m) return query(i, j, l, m, v+1);
-		if(i>=m) return query(i, j, m, r, vr);
+		size_t m = (l+r) >> 1, vr = v + (m-l)*2;
+		if(j <= m) return query(i, j, l, m, v+1);
+		if(i >= m) return query(i, j, m, r, vr);
 		return T(query(i,m,l,m,v+1), query(m,j,m,r,vr));
 	}
 	
@@ -71,3 +70,16 @@ struct segment_tree {
 		return cur;
 	}
 };
+
+/* implement:
+	struct operation {
+		operation()
+		operation(const operation &a, const operation &b)
+		auto split(size_t sl, size_t sr) const { return pair{*this,*this}; }
+	};
+	struct node {
+		node()
+		node(const node &l, const node &r)
+		node(const node &t, const operation &o, size_t length)
+	}
+*/
