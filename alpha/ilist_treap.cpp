@@ -117,14 +117,14 @@ struct ilist_treap {
 		return insert(it, new node(x));
 	}
 	
+	iterator insert(iterator pos, iterator it) {
+		return insert(pos, it.t);
+	}
+	
 	iterator insert(iterator pos, ilist_treap &&a) {
 		auto [v, aend] = split(a.__end);
 		a.root = aend;
 		return insert(pos, v);
-	}
-	
-	iterator insert(iterator pos, iterator it) {
-		return insert(pos, it.t);
 	}
 	
 	ilist_treap erase(iterator first, iterator last) {
@@ -172,7 +172,7 @@ struct ilist_treap {
 			set_left(v, sl);
 			set_right(v, sr);
 		} else 
-		if(s->l == nullptr) s->l = v, v->p = s;
+		if(s->l == nullptr) set_left(s, v);
 		else {
 			for(t = s->l; t->r && t->r->priority > v->priority; t = t->r) ;
 			set_left(v, t->r);
@@ -223,7 +223,6 @@ struct ilist_treap {
 		}
 	}
 	static size_t get_pos(node *t) {
-		assert(t != nullptr);
 		size_t pos = sz(t->l);
 		while(t->p) {
 			if(t->p->r == t) pos+=sz(t->p->l)+1;
@@ -248,7 +247,6 @@ struct ilist_treap {
 	
 	//split by *s such right starts with *s
 	static pair<node*,node*> split(node *s) {
-		assert(s!=nullptr);
 		node *l = s->l, *r = s;
 		if(s->l) s->l->p = nullptr, s->l = nullptr;
 		upd_sz(r);
