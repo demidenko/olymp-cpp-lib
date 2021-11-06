@@ -20,15 +20,11 @@ struct ilist_treap {
 	struct node_iterator: public std::iterator<std::random_access_iterator_tag, V, size_t> {
 		friend ilist_treap;
 		private: node *t;
-		public:
 		node_iterator(node *ptr = nullptr): t(ptr) { }
+		public:
 		V& operator*() { return *t->value; }
 		bool operator==(const node_iterator &it) { return t == it.t; }
 		bool operator!=(const node_iterator &it) { return t != it.t; }
-		
-		size_t operator-(const node_iterator &it) const {
-			return get_pos(t) - get_pos(it.t);
-		}
 		
 		node_iterator& operator++() {
 			t = t->r ? leftmost(t->r) : right_parent(t);
@@ -49,7 +45,7 @@ struct ilist_treap {
 			return *this;
 		}
 		
-		node_iterator operator-=(size_t n) {
+		node_iterator& operator-=(size_t n) {
 			for(; n--; t = left_parent(t))
 				if(size_t sl = sz(t->l); n < sl) {
 					t = nth(t->l, sl-n-1);
@@ -60,6 +56,10 @@ struct ilist_treap {
 		
 		node_iterator operator+(size_t n) const { return node_iterator(t)+=n; }
 		node_iterator operator-(size_t n) const { return node_iterator(t)-=n; }
+		
+		size_t operator-(const node_iterator &it) const {
+			return get_pos(t) - get_pos(it.t);
+		}
 	};
 	
 	using iterator = node_iterator<T>;
