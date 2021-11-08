@@ -20,8 +20,9 @@ struct ilist_treap {
 	struct node_iterator: public std::iterator<std::random_access_iterator_tag, V, size_t> {
 		friend ilist_treap;
 		private: node *t;
-		node_iterator(node *ptr = nullptr): t(ptr) { }
+		node_iterator(node *ptr): t(ptr) { }
 		public:
+		node_iterator(): node_iterator(nullptr) { }
 		V& operator*() { return *t->value; }
 		bool operator==(const node_iterator &it) { return t == it.t; }
 		bool operator!=(const node_iterator &it) { return t != it.t; }
@@ -97,7 +98,7 @@ struct ilist_treap {
 	}
 	
 	ilist_treap(extracted e): ilist_treap() { 
-		merge(e.t, __end, root);
+		root = merge(e.t, __end);
 	}
 	
 	~ilist_treap() { delete_nodes(root); }
@@ -145,7 +146,7 @@ struct ilist_treap {
 	extracted extract(iterator first, iterator last) {
 		auto [l, suf] = split(first.t);
 		auto [mid, r] = split(last.t);
-		merge(l, r, root);
+		root = merge(l, r);
 		return extracted(mid);
 	}
 	
@@ -157,8 +158,7 @@ struct ilist_treap {
 		node *t = it.t, *p = t->p;
 		assert(t != __end);
 		node *&target = p ? ref_in_parent(t) : root;
-		merge(t->l, t->r, target);
-		if(target) target->p = p;
+		if(target = merge(t->l, t->r)) target->p = p;
 		for(node *v = p; v; v = v->p) upd_sz(v);
 		t->p = t->l = t->r = nullptr;
 		t->sz = 1;
@@ -170,15 +170,15 @@ struct ilist_treap {
 	node *root, *__end;
 	
 	ilist_treap(node *v): ilist_treap() {
-		merge(v, __end, root);
+		root = merge(v, __end);
 	}
 	
 	iterator insert(iterator it, node *v) {
 		if(sz(v) == 1) return insert_one(it.t, v);
 		auto res = iterator(leftmost(v));
 		auto [l, r] = split(it.t);
-		if(sz(l) < sz(r)) merge(l, v, l); else merge(v, r, r);
-		merge(l, r, root);
+		if(sz(l) < sz(r)) l = merge(l, v); else r = merge(v, r);
+		root = merge(l, r);
 		return res;
 	}
 	
@@ -244,17 +244,17 @@ struct ilist_treap {
 		return pos;
 	}
 	
-	static void merge(node *l, node *r, node *&t) {
-		if(l == nullptr) t = r; else
-		if(r == nullptr) t = l; else {
-			if(l->priority > r->priority) {
-				merge(l->r, r, l->r);
-				l->r->p = t = l;
-			} else {
-				merge(l, r->l, r->l);
-				r->l->p = t = r;
-			}
-			upd_sz(t);
+	static node* merge(node *l, node *r) {
+		if(l == nullptr) return r;
+		if(r == nullptr) return l;
+		if(l->priority > r->priority) {
+			l->sz += r->sz;
+			set_right(l, merge(l->r, r));
+			return l;
+		} else {
+			r->sz += l->sz;
+			set_left(r, merge(l, r->l));
+			return r;
 		}
 	}
 	
