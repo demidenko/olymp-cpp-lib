@@ -5,13 +5,13 @@ struct ilist_treap {
 		node *l, *r, *p;
 		const size_t priority;
 		size_t sz;
-		T* value;
+		T *value;
 		node(const T &x): node(new T(x)) {}
 		
 		private:
 		friend ilist_treap;
 		static inline auto gen = mt19937_64(chrono::high_resolution_clock::now().time_since_epoch().count());
-		node(T* ptr = nullptr): l(nullptr), r(nullptr), p(nullptr), priority(gen()), sz(1), value(ptr) { }
+		node(T *ptr = nullptr): l(nullptr), r(nullptr), p(nullptr), priority(gen()), sz(1), value(ptr) { }
 		
 		~node() { if(value != nullptr) delete value; }
 	};
@@ -68,7 +68,7 @@ struct ilist_treap {
 	
 	struct extracted {
 		private: friend ilist_treap;
-		extracted(node *v): t(v) {}
+		extracted(node *ptr): t(ptr) {}
 		node *t;
 	};
 	
@@ -77,12 +77,16 @@ struct ilist_treap {
 		root = __end = new node();
 	}
 	
-	explicit ilist_treap(size_t n, const T &value = {}): ilist_treap() {
-		while(n--) push_back(value);
+	explicit ilist_treap(size_t n, const T &value = {}) {
+		node* nodes = init_nodes(n);
+		for(size_t i=0; i<n; ++i) *nodes[i].value = value;
 	}
 	
-	ilist_treap(std::initializer_list<T> values): ilist_treap() { 
-		for(auto&& x : values) push_back(x);
+	template<class _InputIterator>
+	ilist_treap(_InputIterator first, _InputIterator last) {
+		size_t n = std::distance(first, last);
+		node* nodes = init_nodes(n);
+		for(size_t i=0; i<n; ++i, ++first) *nodes[i].value = *first;
 	}
 	
 	ilist_treap(const ilist_treap &a) = delete ;
@@ -101,21 +105,19 @@ struct ilist_treap {
 		root = merge(e.t, __end);
 	}
 	
-	~ilist_treap() { delete_nodes(root); }
-	
-	
 	size_t size() const { return sz(root) - 1; }
 	bool empty() const { return sz(root) == 1; }
+	
+	void clear() {
+		split(__end);
+		root = __end;
+	}
 	
 	iterator begin() { return leftmost(root); }
 	iterator end() { return __end; }
 	const_iterator begin() const { return leftmost(root); }
 	const_iterator end() const { return __end; }
 	
-	void clear() {
-		delete_nodes(split(__end).first);
-		root = __end;
-	}
 	
 	iterator at(size_t pos) { return nth(root, pos); }
 	const_iterator at(size_t pos) const { return nth(root, pos); }
@@ -171,6 +173,15 @@ struct ilist_treap {
 	
 	ilist_treap(node *v): ilist_treap() {
 		root = merge(v, __end);
+	}
+	
+	node* init_nodes(size_t n) {
+		node *nodes = new node[n+1];
+		T *values = new T[n];
+		for(size_t i=0; i<n; ++i) nodes[i].value = values + i;
+		__end = nodes + n;
+		root = build(nodes, __end + 1);
+		return nodes;
 	}
 	
 	iterator insert(iterator it, node *v) {
@@ -277,10 +288,14 @@ struct ilist_treap {
 		return {l, r};
 	}
 	
-	static void delete_nodes(node *v) {
-		if(v == nullptr) return ;
-		delete_nodes(v->l);
-		delete_nodes(v->r);
-		delete v;
+	static node* build(node *l, node *r) {
+		if(l == r) return nullptr;
+		for(node *t = l, *i = l+1; ; ++i) if(i == r || t->priority < i->priority) {
+			set_right(t, build(t+1, i));
+			upd_sz(t);
+			if(i == r) return t;
+			set_left(i, t);
+			t = i;
+		}
 	}
 };
