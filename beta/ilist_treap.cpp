@@ -82,7 +82,7 @@ struct ilist_treap {
 		for(size_t i=0; i<n; ++i) *nodes[i].value = value;
 	}
 	
-	template<class _InputIterator>
+	template<class _InputIterator, class = std::_RequireInputIter<_InputIterator>>
 	ilist_treap(_InputIterator first, _InputIterator last) {
 		size_t n = std::distance(first, last);
 		node* nodes = init_nodes(n);
