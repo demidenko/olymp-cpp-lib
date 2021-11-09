@@ -290,12 +290,12 @@ struct ilist_treap {
 	
 	static node* build(node *l, node *r) {
 		if(l == r) return nullptr;
-		for(node *t = l, *i = l+1; ; ++i) if(i == r || t->priority < i->priority) {
-			set_right(t, build(t+1, i));
+		for(node *t = l++; ; ++l) if(l == r || t->priority < l->priority) {
+			set_right(t, build(t+1, l));
 			upd_sz(t);
-			if(i == r) return t;
-			set_left(i, t);
-			t = i;
+			if(l == r) return t;
+			set_left(l, t);
+			t = l;
 		}
 	}
 };
