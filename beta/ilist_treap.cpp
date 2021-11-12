@@ -91,15 +91,10 @@ struct ilist_treap {
 	
 	ilist_treap(const ilist_treap &a) = delete ;
 	
-	ilist_treap(ilist_treap &&a) = default ;
+	ilist_treap(ilist_treap &&a): root(exchange(a.root, nullptr)), __end(exchange(a.__end, nullptr)) {}
 	
 	ilist_treap& operator=(const ilist_treap &a) = delete ;
-	
-	ilist_treap& operator=(ilist_treap &&a) {
-		root = exchange(a.root, nullptr);
-		__end = exchange(a.__end, nullptr);
-		return *this;
-	}
+	ilist_treap& operator=(ilist_treap &&a) = default ;
 	
 	size_t size() const { return sz(root) - 1; }
 	bool empty() const { return sz(root) == 1; }
@@ -169,6 +164,15 @@ struct ilist_treap {
 	
 	ilist_treap(node *v): ilist_treap() {
 		root = merge(v, __end);
+	}
+	
+	node* init_nodes(size_t n) {
+		node *nodes = new node[n+1];
+		T *values = new T[n];
+		for(size_t i=0; i<n; ++i) nodes[i].value = values + i;
+		__end = nodes + n;
+		root = build(nodes, __end + 1);
+		return nodes;
 	}
 	
 	iterator insert(iterator it, node *v) {
@@ -271,15 +275,6 @@ struct ilist_treap {
 			upd_sz(s);
 		}
 		return {l, r};
-	}
-	
-	node* init_nodes(size_t n) {
-		node *nodes = new node[n+1];
-		T *values = new T[n];
-		for(size_t i=0; i<n; ++i) nodes[i].value = values + i;
-		__end = nodes + n;
-		root = build(nodes, __end + 1);
-		return nodes;
 	}
 	
 	static node* build(node *l, node *r) {
