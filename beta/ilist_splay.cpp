@@ -152,6 +152,7 @@ struct ilist_splay {
 	
 	ilist_splay(node *v): ilist_splay() {
 		set_left(__end, v);
+		upd_sz(__end);
 	}
 
 	iterator insert(iterator it, node *v) {
