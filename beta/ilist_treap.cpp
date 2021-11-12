@@ -12,8 +12,6 @@ struct ilist_treap {
 		friend ilist_treap;
 		static inline auto gen = mt19937_64(chrono::high_resolution_clock::now().time_since_epoch().count());
 		node(T *ptr = nullptr): l(nullptr), r(nullptr), p(nullptr), priority(gen()), sz(1), value(ptr) { }
-		
-		~node() { if(value != nullptr) delete value; }
 	};
 	
 	template<class V>
