@@ -89,6 +89,8 @@ struct ilist_treap {
 		for(size_t i=0; i<n; ++i, ++first) *nodes[i].value = *first;
 	}
 	
+	ilist_treap(extracted e): ilist_treap(e.t) {}
+	
 	ilist_treap(const ilist_treap &a) = delete ;
 	
 	ilist_treap(ilist_treap &&a) = default ;
@@ -99,10 +101,6 @@ struct ilist_treap {
 		root = exchange(a.root, nullptr);
 		__end = exchange(a.__end, nullptr);
 		return *this;
-	}
-	
-	ilist_treap(extracted e): ilist_treap() { 
-		root = merge(e.t, __end);
 	}
 	
 	size_t size() const { return sz(root) - 1; }
@@ -175,15 +173,6 @@ struct ilist_treap {
 		root = merge(v, __end);
 	}
 	
-	node* init_nodes(size_t n) {
-		node *nodes = new node[n+1];
-		T *values = new T[n];
-		for(size_t i=0; i<n; ++i) nodes[i].value = values + i;
-		__end = nodes + n;
-		root = build(nodes, __end + 1);
-		return nodes;
-	}
-	
 	iterator insert(iterator it, node *v) {
 		if(sz(v) == 1) return insert_one(it.t, v);
 		auto res = iterator(leftmost(v));
@@ -216,9 +205,7 @@ struct ilist_treap {
 	static inline node*& ref_in_parent(node *t) { return t->p->l == t ? t->p->l : t->p->r; }
 	static inline void set_left(node *v, node *to) { v->l = to; if(to) to->p = v; }
 	static inline void set_right(node *v, node *to) { v->r = to; if(to) to->p = v; }
-	static inline void upd_sz(node *t) {
-		if(t) t->sz = (t->l ? t->l->sz : 0) + (t->r ? t->r->sz : 0) + 1;
-	}
+	static inline void upd_sz(node *t) { if(t) t->sz = sz(t->l) + sz(t->r) + 1; }
 	
 	static inline node* leftmost(node *t) {
 		while(t->l) t = t->l;
@@ -238,7 +225,7 @@ struct ilist_treap {
 	}
 	
 	static node* nth(node *v, size_t n) {
-		assert(n<sz(v));
+		assert(n < sz(v));
 		for(;;) {
 			size_t sl = sz(v->l);
 			if(n == sl) return v;
@@ -286,6 +273,15 @@ struct ilist_treap {
 			upd_sz(s);
 		}
 		return {l, r};
+	}
+	
+	node* init_nodes(size_t n) {
+		node *nodes = new node[n+1];
+		T *values = new T[n];
+		for(size_t i=0; i<n; ++i) nodes[i].value = values + i;
+		__end = nodes + n;
+		root = build(nodes, __end + 1);
+		return nodes;
 	}
 	
 	static node* build(node *l, node *r) {
