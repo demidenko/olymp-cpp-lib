@@ -24,13 +24,13 @@ struct ilist_splay {
 		bool operator!=(const node_iterator &it) { return t != it.t; }
 
 		node_iterator& operator++() {
-			splay(t);
+			if(t->r == nullptr) splay(t);
 			t = leftmost(t->r);
 			return *this;
 		}
 
 		node_iterator& operator--() {
-			splay(t);
+			if(t->l == nullptr) splay(t);
 			t = rightmost(t->l);
 			return *this;
 		}
@@ -279,4 +279,4 @@ struct ilist_splay {
 		return mid;
 	}
 };
-template<class T> using ilist = ilist_splay<T>;
+//template<class T> using ilist = ilist_splay<T>;
