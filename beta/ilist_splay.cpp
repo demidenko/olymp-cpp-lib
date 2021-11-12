@@ -63,7 +63,7 @@ struct ilist_splay {
 	};
 
 
-	ilist_splay(): __end(new node()) {}
+	ilist_splay(): __end(new node()), __size(0) {}
 
 	explicit ilist_splay(size_t n, const T &value = {}) {
 		node* nodes = init_nodes(n);
@@ -81,19 +81,18 @@ struct ilist_splay {
 	
 	ilist_splay(const ilist_splay &a) = delete ;
 	
-	ilist_splay(ilist_splay &&a) = default ;
+	ilist_splay(ilist_splay &&a): __end(exchange(a.__end, nullptr)), __size(a.__size) {}
 	
 	ilist_splay& operator=(const ilist_splay &a) = delete ;
-	
-	ilist_splay& operator=(ilist_splay &&a) {
-		__end = exchange(a.__end, nullptr);
-		return *this;
+	ilist_splay& operator=(ilist_splay &&a) = default ;
+
+	size_t size() const { return __size; }
+	bool empty() const { return __size == 0; }
+
+	void clear() {
+		split(__end);
+		__size = 0;
 	}
-
-	size_t size() const { return sz(splay(__end)) - 1; } //not O(1) !!!
-	bool empty() const { return __end->p == nullptr && __end->l == nullptr; }
-
-	void clear() { split(__end); }
 
 	iterator begin() { return leftmost(splay(__end)); }
 	iterator end() { return __end; }
@@ -129,6 +128,7 @@ struct ilist_splay {
 		auto [l, mid] = split(first.t);
 		set_left(r, l);
 		upd_sz(r);
+		__size -= sz(mid);
 		return extracted(mid);
 	}
 	
@@ -143,19 +143,33 @@ struct ilist_splay {
 		if(r) t->r = r->p = nullptr;
 		t->sz = 1;
 		merge(l, r);
+		--__size;
 		return iterator(t);
 	}
 	
 	
 	private:
 	node * __end;
+	size_t __size;
 	
 	ilist_splay(node *v): ilist_splay() {
+		__size = sz(v);
 		set_left(__end, v);
 		upd_sz(__end);
 	}
 
+	node* init_nodes(size_t n) {
+		node *nodes = new node[n+1];
+		T *values = new T[n];
+		for(size_t i=0; i<n; ++i) nodes[i].value = values + i;
+		__end = nodes + n;
+		__size = n;
+		build(nodes, __end + 1);
+		return nodes;
+	}
+
 	iterator insert(iterator it, node *v) {
+		__size += sz(v);
 		auto [l, r] = split(it.t);
 		v = leftmost(v);
 		set_left(v, l);
@@ -253,15 +267,6 @@ struct ilist_splay {
 		set_left(t, l);
 		upd_sz(t);
 		return t;
-	}
-
-	node* init_nodes(size_t n) {
-		node *nodes = new node[n+1];
-		T *values = new T[n];
-		for(size_t i=0; i<n; ++i) nodes[i].value = values + i;
-		__end = nodes + n;
-		build(nodes, __end + 1);
-		return nodes;
 	}
 
 	static node* build(node *l, node *r) {
