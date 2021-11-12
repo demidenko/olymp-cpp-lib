@@ -288,3 +288,4 @@ struct ilist_treap {
 		}
 	}
 };
+template<class T> using ilist = ilist_treap<T>;

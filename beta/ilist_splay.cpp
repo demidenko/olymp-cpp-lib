@@ -279,3 +279,4 @@ struct ilist_splay {
 		return mid;
 	}
 };
+template<class T> using ilist = ilist_splay<T>;
