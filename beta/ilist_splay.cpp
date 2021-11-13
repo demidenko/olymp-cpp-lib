@@ -175,12 +175,12 @@ struct ilist_splay {
 	static inline void set_right(node *v, node *to) { v->r = to; if(to) to->p = v; }
 	static inline void upd_sz(node *t) { if(t) t->sz = sz(t->l) + sz(t->r) + 1; }
 
-	static inline node* leftmost(node *t) {
+	static node* leftmost(node *t) {
 		while(t->l) rotate_right(t), t = t->p;
 		return t;
 	}
 	
-	static inline node* rightmost(node *t) {
+	static node* rightmost(node *t) {
 		while(t->r) rotate_left(t), t = t->p;
 		return t;
 	}

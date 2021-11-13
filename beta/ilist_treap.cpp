@@ -195,18 +195,21 @@ struct ilist_treap {
 	static inline void set_right(node *v, node *to) { v->r = to; if(to) to->p = v; }
 	static inline void upd_sz(node *t) { if(t) t->sz = sz(t->l) + sz(t->r) + 1; }
 	
-	static inline node* leftmost(node *t) {
+	static node* leftmost(node *t) {
 		while(t->l) t = t->l;
 		return t;
 	}
-	static inline node* rightmost(node *t) {
+	
+	static node* rightmost(node *t) {
 		while(t->r) t = t->r;
 		return t;
 	}
+	
 	static inline node* left_parent(node *t) {
 		while(t->p->l == t) t = t->p;
 		return t->p;
 	}
+	
 	static inline node* right_parent(node *t) {
 		while(t->p->r == t) t = t->p;
 		return t->p;
