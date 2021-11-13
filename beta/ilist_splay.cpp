@@ -140,11 +140,15 @@ struct ilist_splay {
 
 	iterator erase(iterator it) {
 		node *t = splay(it.t);
+		assert(t != __end);
 		node *l = t->l, *r = t->r;
-		if(l) t->l = l->p = nullptr;
-		if(r) t->r = r->p = nullptr;
 		t->sz = 1;
-		merge(l, r);
+		t->r = t->l = r->p = nullptr;
+		if(l) {
+			r = leftmost(r);
+			set_left(r, l);
+			upd_sz(r);
+		}
 		--__size;
 		return iterator(t);
 	}
@@ -263,15 +267,6 @@ struct ilist_splay {
 			upd_sz(s);
 		}
 		return {l, s};
-	}
-
-	static node* merge(node *l, node *r) {
-		if(l == nullptr) return r;
-		if(r == nullptr) return l;
-		node *t = leftmost(r);
-		set_left(t, l);
-		upd_sz(t);
-		return t;
 	}
 
 	static node* build(node *l, node *r) {
