@@ -24,15 +24,17 @@ struct ilist_splay {
 		bool operator!=(const node_iterator &it) { return t != it.t; }
 
 		node_iterator& operator++() {
-			if(t->r == nullptr) splay(t);
-			t = leftmost(t->r);
-			return *this;
+			for(;; rotate_big(t, t->p, t->p->p)) {
+				if(t->r) return t = leftmost(t->r), *this;
+				if(t->p->l == t) return t = t->p, *this;
+			}
 		}
 
 		node_iterator& operator--() {
-			if(t->l == nullptr) splay(t);
-			t = rightmost(t->l);
-			return *this;
+			for(;; rotate_big(t, t->p, t->p->p)) {
+				if(t->l) return t = rightmost(t->l), *this;
+				if(t->p->r == t) return t = t->p, *this;
+			}
 		}
 
 		node_iterator& operator+=(size_t n) {
