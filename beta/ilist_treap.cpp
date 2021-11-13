@@ -2,22 +2,20 @@ template<class T>
 struct ilist_treap {
 	
 	struct node {
+		private: friend ilist_treap;
 		node *l, *r, *p;
 		const size_t priority;
 		size_t sz;
 		T *value;
 		node(const T &x): node(new T(x)) {}
-		
-		private:
-		friend ilist_treap;
-		static inline auto gen = mt19937_64(chrono::high_resolution_clock::now().time_since_epoch().count());
 		node(T *ptr = nullptr): l(nullptr), r(nullptr), p(nullptr), priority(gen()), sz(1), value(ptr) { }
+		static inline auto gen = mt19937_64(chrono::high_resolution_clock::now().time_since_epoch().count());
 	};
 	
 	template<class V>
 	struct node_iterator: public std::iterator<std::random_access_iterator_tag, V, size_t> {
-		friend ilist_treap;
-		private: node *t;
+		private: friend ilist_treap;
+		node *t;
 		node_iterator(node *ptr): t(ptr) { }
 		public:
 		node_iterator(): node_iterator(nullptr) { }
@@ -109,7 +107,6 @@ struct ilist_treap {
 	const_iterator begin() const { return leftmost(root); }
 	const_iterator end() const { return __end; }
 	
-	
 	iterator at(size_t pos) { return nth(root, pos); }
 	const_iterator at(size_t pos) const { return nth(root, pos); }
 	
@@ -117,19 +114,9 @@ struct ilist_treap {
 	const T& operator[](size_t pos) const { return *at(pos); }
 	
 	void push_back(const T &x) { insert(__end, x); }
-	
-	iterator insert(iterator pos, const T &x) {
-		return insert(pos, new node(x));
-	}
-	
-	iterator insert(iterator pos, iterator it) {
-		return insert(pos, it.t);
-	}
-	
-	iterator insert(iterator pos, extracted e) {
-		return insert(pos, e.t);
-	}
-	
+	iterator insert(iterator pos, const T &x) { return insert(pos, new node(x)); }
+	iterator insert(iterator pos, iterator it) { return insert(pos, it.t); }
+	iterator insert(iterator pos, extracted e) { return insert(pos, e.t); }
 	iterator insert(iterator pos, ilist_treap &&a) {
 		auto [v, aend] = split(a.__end);
 		a.root = aend;
@@ -157,7 +144,6 @@ struct ilist_treap {
 		t->sz = 1;
 		return iterator(t);
 	}
-	
 	
 	private:
 	node *root, *__end;
@@ -226,22 +212,20 @@ struct ilist_treap {
 		return t->p;
 	}
 	
+	static size_t get_pos(node *t) {
+		size_t pos = sz(t->l);
+		for(; t->p; t = t->p) if(t->p->r == t) pos += sz(t->p->l)+1;
+		return pos;
+	}
+	
 	static node* nth(node *v, size_t n) {
 		assert(n < sz(v));
 		for(;;) {
 			size_t sl = sz(v->l);
 			if(n == sl) return v;
 			if(n < sl) v = v->l;
-			else n-=sl+1, v = v->r;
+			else n -= sl+1, v = v->r;
 		}
-	}
-	static size_t get_pos(node *t) {
-		size_t pos = sz(t->l);
-		while(t->p) {
-			if(t->p->r == t) pos+=sz(t->p->l)+1;
-			t = t->p;
-		}
-		return pos;
 	}
 	
 	static node* merge(node *l, node *r) {
