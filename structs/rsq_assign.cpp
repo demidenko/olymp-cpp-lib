@@ -1,8 +1,8 @@
-template<typename T, typename A = T>
+template<class T, class A = T>
 struct rsq_assign {
-	rsq_assign(const vector<auto> &vals) {
-		for(d=2; d<size(vals); d<<=1);
-		t.assign(d*2, pair(T(), nullopt));
+	explicit rsq_assign(size_t sz = 0): d(_p2(sz)), t(d*2, {{},nullopt}) {}
+	
+	rsq_assign(const vector<auto> &vals): rsq_assign(size(vals)) {
 		for(size_t i=0; i<size(vals); ++i) t[i+d].first = vals[i];
 		_build();
 	}
@@ -14,18 +14,18 @@ struct rsq_assign {
 	
 	T operator()(size_t l, size_t r) const {
 		if(r>d) r = d;
-		T buf = T();
+		T buf{};
 		if(l<r) _calc(l,r,0,d,1,buf);
 		return buf;
 	}
 	
 	private:
-	size_t d;
+	const size_t d;
 	vector<pair<T,optional<A>>> t;
 	
-	void _build() {
-		for(size_t i=d; i-->1; ) t[i].first = t[i*2].first + t[i*2+1].first;
-	}
+	static size_t _p2(size_t n) { return n > 1 ? (2<<__lg(n-1)) : 1 }
+	void _build() { for(size_t i=d; i-->1; ) _build_node(i); }
+	inline void _build_node(size_t v) { t[v].first = t[v*2].first + t[v*2+1].first; }
 	
 	void _push(size_t v, size_t len) {
 		if(auto &a = t[v].second) {
@@ -43,15 +43,15 @@ struct rsq_assign {
 		size_t m = (l+r)>>1;
 		if(i<m) _assign(i,min(j,m),val,l,m,v*2);
 		if(m<j) _assign(max(i,m),j,val,m,r,v*2+1);
-		t[v].first = t[v*2].first + t[v*2+1].first;
+		_build_node(v);
 	}
 	
 	void _calc(size_t i, size_t j, size_t l, size_t r, size_t v, T &buf) const {
-		if(i==l && j==r) buf+=t[v].first; else
-		if(auto a = t[v].second; !a) {
+		if(i==l && j==r) buf += t[v].first; else
+		if(auto a = t[v].second) buf += T(j-i) * *a; else {
 			size_t m = (l+r)>>1;
 			if(i<m) _calc(i,min(j,m),l,m,v*2,buf);
 			if(m<j) _calc(max(i,m),j,m,r,v*2+1,buf);
-		} else buf+= T(j-i) * *a;
+		}
 	}
 };
