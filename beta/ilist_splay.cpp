@@ -222,7 +222,7 @@ struct ilist_splay {
 	
 	static void rotate_big(node *x, node *p, node *g) {
 		if(node *gg = g->p) gg->l == g ? set_left(gg, x) : set_right(gg, x); else x->p = nullptr;
-	    if(g->l == p) {
+		if(g->l == p) {
 			if(p->l == x) set_left(g, p->r), set_left(p, x->r), set_right(p, g), set_right(x, p);
 			else set_left(g, x->r), set_right(p, x->l), set_left(x, p), set_right(x, g);
 		} else {
