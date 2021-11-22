@@ -2,10 +2,7 @@ template<class T, const T& f(const T&, const T&) = std::min<T> >
 struct rmq_assign {
 	constexpr static T neutral = [](T m,T M){return f(m,M)==m?M:m;}(numeric_limits<T>::min(),numeric_limits<T>::max());
 	
-	explicit rmq_assign(size_t sz, const T &val = neutral) {
-		for(d=1; d<sz; d<<=1);
-		t.assign(d*2, {val, false});
-	}
+	explicit rmq_assign(size_t sz = 0): d(_p2(sz)), t(d*2, {neutral, false}) {}
 	
 	rmq_assign(const vector<auto> &vals): rmq_assign(size(vals)) {
 		for(size_t i=0; i<size(vals); ++i) t[i+d].first = vals[i];
@@ -23,18 +20,19 @@ struct rmq_assign {
 		if(l<r) _calc(l,r,0,d,1,buf);
 		return buf;
 	}
+	T operator[](size_t i) const {
+		T result = t[i+=d].first;
+		while(i>>=1) if(t[i].second) result = t[i].first;
+		return result;
+	}
 	
 	private:
-	size_t d;
+	const size_t d;
 	vector<pair<T,bool>> t;
 	
-	void _build() {
-		for(size_t i=d; i-->1; ) _build_node(i);
-	}
-	
-	inline void _build_node(size_t v) {
-		t[v].first = f(t[v*2].first, t[v*2+1].first);
-	}
+	static size_t _p2(size_t n) { return n > 1 ? (2<<__lg(n-1)) : 1 }
+	void _build() { for(size_t i=d; i-->1; ) _build_node(i); }
+	inline void _build_node(size_t v) { t[v].first = f(t[v*2].first, t[v*2+1].first); }
 	
 	void _push(size_t v) {
 		if(t[v].second) {
