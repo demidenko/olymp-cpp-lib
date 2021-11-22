@@ -1,4 +1,4 @@
-template<class T, const T& f(const T&, const T&) = std::min<T> >
+template<class T, const T& f(const T&, const T&) = std::min<T>, class A = T >
 struct rmq_add {
 	constexpr static T neutral = [](T m,T M){return f(m,M)==m?M:m;}(numeric_limits<T>::min(),numeric_limits<T>::max());
 	
@@ -25,29 +25,23 @@ struct rmq_add {
 		return result;
 	}
 	
-	void add(size_t l, size_t r, const T &val) {
+	void add(size_t l, size_t r, const A &val) {
 		if(r > d) r = d;
 		if(l < r) _add(l,r,val,0,d,1);
 	}
 	
-	void set_value(size_t i, T val) {
-		for(size_t v = i+d; v>>=1; ) val-=t[v].second;
-		t[i+d].first = t[i+d].second = val;
-		for(size_t v = i+d; v>>=1; ) _build_node(v);
-	}
-	
 	private:
 	const size_t d;
-	vector<pair<T,T>> t;
+	vector<pair<T,A>> t;
 	
 	static size_t _p2(size_t n) { return n > 1 ? (2<<__lg(n-1)) : 1; }
 	void _build() { for(size_t i=d; i-->1; ) _build_node(i); }
 	inline void _build_node(size_t v) { t[v].first = f(t[v*2].first, t[v*2+1].first) + t[v].second; }
 	
-	void _add(size_t i, size_t j, const T &val, size_t l, size_t r, size_t v) {
+	void _add(size_t i, size_t j, const A &val, size_t l, size_t r, size_t v) {
 		if(i==l && j==r) {
-			t[v].first+=val;
-			t[v].second+=val;
+			t[v].first += val;
+			t[v].second += val;
 			return ;
 		}
 		size_t m = (l+r)>>1;
