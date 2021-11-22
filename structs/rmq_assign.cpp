@@ -30,7 +30,7 @@ struct rmq_assign {
 	const size_t d;
 	vector<pair<T,bool>> t;
 	
-	static size_t _p2(size_t n) { return n > 1 ? (2<<__lg(n-1)) : 1 }
+	static size_t _p2(size_t n) { return n > 1 ? (2<<__lg(n-1)) : 1; }
 	void _build() { for(size_t i=d; i-->1; ) _build_node(i); }
 	inline void _build_node(size_t v) { t[v].first = f(t[v*2].first, t[v*2+1].first); }
 	
