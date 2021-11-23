@@ -30,7 +30,7 @@ namespace kihash {
 		int32_t(mt19937(chrono::high_resolution_clock::now().time_since_epoch().count())() >> 2);
 	
 	hash_t pow_of_X(size_t n) {
-		hash_t p = 1, a = 1;
+		hash_t p = 1, a = X;
 		for(; n; n>>=1, a*=a) if(n&1) p*=a;
 		return p;
 	}
@@ -48,7 +48,7 @@ namespace kihash {
 		hash_view(): h(0), length(0), px(1) {}
 		hash_view(const hash_t &h, size_t len): hash_view(h, len, pow_of_X(len)) {}
 		hash_view(const string &s): hash_view(hash(s), size(s)) {}
-		hash_view(char ch): hash_view(ch, 1) {}
+		hash_view(int32_t ch): hash_view(ch, 1) {}
 		void operator+=(const hash_view &a) {
 			h += a.h * px;
 			length += a.length;
