@@ -4,7 +4,7 @@ int inv_mod(int a, int m) { assert(0<a); assert(a<m);
 
 template<int mod> struct modint {
 	modint(): x(0) {}
-	modint(auto &&val): x(val%mod) { if(x<0) x+=mod; }
+	template<class T, class=enable_if_t<is_integral_v<T>>> modint(T val): x(val%mod) { if(x<0) x+=mod; }
 	static int get_mod() { return mod; }
 	void operator+=(const modint &b) { x+=b.x; if(x>=mod) x-=mod; }
 	void operator-=(const modint &b) { x-=b.x; if(x<0) x+=mod; }
