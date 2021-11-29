@@ -10,6 +10,8 @@ struct heavy_light_decomposition {
 	
 	size_t index(size_t v) const { return tin[v]; }
 	
+	size_t lca(size_t x, size_t y) const { return query_path(x, y, [](...){}); }
+	
 	size_t query_path(size_t x, size_t y, auto process_range, bool ignore_lca = false) const {
 		if(tin[x] > tin[y]) swap(x, y);
 		for(size_t v; tin[v=header[y]] > tin[x]; y = par[v]) 
@@ -22,7 +24,16 @@ struct heavy_light_decomposition {
 		return x;
 	}
 	
-	size_t lca(size_t x, size_t y) const { return query_path(x, y, [](...){}); }
+	size_t query_path_strict(size_t x, size_t y, auto process_range, bool ignore_lca = false) const {
+		bool flip = tin[x] > tin[y];
+		if(flip) swap(x, y);
+		vector<pair<size_t,size_t>> sl, sr;
+		size_t tx = tin[x], z = query_path(x, y, [&](size_t l, size_t r) { (r-1 > tx ? sr : sl).emplace_back(l, r); });
+		if(flip) sl.swap(sr);
+		for(auto [l, r] : sl) process_range(l, r, true);
+		for(size_t i=size(sr); i--; ) process_range(sr[i].first, sr[i].second, false);
+		return z;
+	}
 	
 	private:
 	vector<size_t> par, header, tin;
