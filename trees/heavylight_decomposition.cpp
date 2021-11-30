@@ -25,11 +25,9 @@ struct heavy_light_decomposition {
 	}
 	
 	size_t query_path_strict(size_t x, size_t y, auto process_range, bool ignore_lca = false) const {
-		bool flip = tin[x] > tin[y];
-		if(flip) swap(x, y);
 		vector<pair<size_t,size_t>> sl, sr;
-		size_t tx = tin[x], z = query_path(x, y, [&](size_t l, size_t r) { (r-1 > tx ? sr : sl).emplace_back(l, r); });
-		if(flip) sl.swap(sr);
+		size_t m = min(tin[x],tin[y]), z = query_path(x, y, [&](size_t l, size_t r) { (r-1 > m ? sr : sl).emplace_back(l, r); });
+		if(tin[x] > tin[y]) sl.swap(sr);
 		for(auto [l, r] : sl) process_range(l, r, true);
 		for(size_t i=size(sr); i--; ) process_range(sr[i].first, sr[i].second, false);
 		return z;
