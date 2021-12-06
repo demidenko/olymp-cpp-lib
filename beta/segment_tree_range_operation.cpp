@@ -9,7 +9,7 @@ struct segment_tree {
 		if(l < r) apply(l, r, operation, 0, d, 1);
 	}
 	
-	T operator()(size_t l, size_t r) {
+	T operator()(size_t l, size_t r) const {
 		if(r > d) r = d;
 		return l < r ? query(l, r, 0, d, 1) : T{};
 	}
@@ -18,15 +18,15 @@ struct segment_tree {
 	
 	private:
 	const size_t d;
-	vector<pair<T,optional<O>>> t;
+	mutable vector<pair<T,optional<O>>> t;
 	
-	void cover(size_t v, const O &operation, size_t length) {
+	void cover(size_t v, const O &operation, size_t length) const {
 		t[v].first = T(t[v].first, operation, length);
 		if(auto &op = t[v].second) op = O(*op, operation);
 		else op = operation;
 	}
 	
-	void push(size_t v, size_t length) {
+	void push(size_t v, size_t length) const {
 		if(auto &op = t[v].second) {
 			size_t sl = length >> 1;
 			auto&& [opl, opr] = op->split(sl, length - sl);
@@ -52,7 +52,7 @@ struct segment_tree {
 		t[v].first = T(t[v+1].first, t[vr].first);
 	}
 	
-	T query(size_t i, size_t j, size_t l, size_t r, size_t v) {
+	T query(size_t i, size_t j, size_t l, size_t r, size_t v) const {
 		if(i == l && j == r) return t[v].first;
 		push(v, r-l);
 		size_t m = (l+r) >> 1, vr = v + (m-l)*2;
@@ -75,7 +75,7 @@ struct segment_tree {
 	struct operation {
 		operation()
 		operation(const operation &a, const operation &b)
-		auto split(size_t sl, size_t sr) const { return pair{*this,*this}; }
+		auto split(size_t sl, size_t sr) const { return pair<const operation&,const operation&>{*this,*this}; }
 	};
 	struct node {
 		node()

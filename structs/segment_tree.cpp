@@ -15,7 +15,7 @@ struct segment_tree {
 	T operator()(size_t l, size_t r) const {
 		const static T neutral{};
 		T fl = neutral, fr = neutral;
-		for(l+=d,r+=d; l<r; l>>=1,r>>=1){
+		for(l+=d,r+=d; l<r; l>>=1,r>>=1) {
 			if(l&1) fl = T(fl, t[l]), ++l;
 			if(r&1) --r, fr = T(t[r], fr);
 		}
@@ -31,10 +31,9 @@ struct segment_tree {
 	vector<T> t;
 	size_t d;
 };
-/*
-implement:
-struct node {
-	node()
-	node(const node &l, const node &r)
-};
+/* implement:
+	struct node {
+		node()
+		node(const node &l, const node &r)
+	};
 */

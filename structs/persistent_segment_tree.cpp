@@ -7,11 +7,10 @@ struct persistent_segment_tree {
 		node(node *l, node *r): l(l), r(r), value(l->value,r->value) {}
 	};
 	
-	T operator()(size_t l, size_t r) { return l < r ? calc(root, sz, l, r) : T{}; };
-	persistent_segment_tree set_value(size_t i, const T &value) { return {set_value(root, sz, i, value), sz}; }
+	T operator()(size_t l, size_t r) const { return l < r ? calc(root, sz, l, r) : T{}; };
+	persistent_segment_tree set_value(size_t i, const T &value) const { return {set_value(root, sz, i, value), sz}; }
 	
 	persistent_segment_tree(const vector<auto> &values): root(build(begin(values),end(values))), sz(size(values)) {}
-	explicit persistent_segment_tree(size_t n=0, const T &value={}): persistent_segment_tree(vector(n,value)) {}
 	
 	private:
 	node *root;
@@ -23,13 +22,13 @@ struct persistent_segment_tree {
 		auto mid = from + (to - from)/2;
 		return new node(build(from,mid), build(mid,to));
 	}
-	node* set_value(node *t, size_t sz, size_t i, const T &value) {
+	node* set_value(node *t, size_t sz, size_t i, const T &value) const {
 		if(sz == 1) return new node(value);
 		size_t m = sz / 2;
 		if(i < m) return new node(set_value(t->l, m, i, value), t->r);
 		return new node(t->l, set_value(t->r, sz-m, i-m, value));
 	}
-	T calc(node *t, size_t sz, size_t i, size_t j) {
+	T calc(node *t, size_t sz, size_t i, size_t j) const {
 		if(i==0 && j==sz) return t->value;
 		size_t m = sz / 2;
 		if(j<=m) return calc(t->l, m, i, j);
