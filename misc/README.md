@@ -1,3 +1,10 @@
+# Nearest
+```c++
+vector<int> a;
+auto next_less = nearest<less, 1>(a);
+auto prev_greater_or_equal = nearest<greater_equal, -1>(a);
+```
+
 # Parallel Binary Search
 Example of usage in solution of task [New Roads Queries](https://cses.fi/problemset/task/2101/)
 ```c++
