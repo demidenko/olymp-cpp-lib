@@ -16,10 +16,10 @@ template<int mod> struct modint {
 	friend modint operator/(modint a, const modint &b) { a/=b; return a; }
 	friend modint operator-(modint a) { if(a.x) a.x = mod - a.x; return a; }
 	friend modint pow(modint a, uint64_t n) { modint p=1; for(; n; n>>=1, a*=a) if(n&1) p*=a; return p; }
-	bool operator==(const modint &b) { return x == b.x; }
-	bool operator!=(const modint &b) { return x != b.x; }
+	bool operator==(const modint &b) const { return x == b.x; }
+	bool operator!=(const modint &b) const { return x != b.x; }
 	friend ostream& operator<<(ostream &o, const modint &m) { return o<<m.x; }
-	explicit operator int() { return x; }
+	explicit operator int() const { return x; }
 	private: int x;
 };
 using mint = modint<(int)998244353>;
