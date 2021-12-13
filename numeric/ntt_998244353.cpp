@@ -18,18 +18,16 @@ namespace NTT {
 				for(bit = n>>1; j&bit; bit>>=1) j^=bit;
 				if((j^=bit) < i) swap(a[i], a[j]);
 			}
-			for(size_t h=1, k=2; h<=H; ++h, k<<=1) {
-				size_t step = n>>h;
-				for(size_t p=0; p<n; p+=k) {
+			for(size_t h=1, k=1; h<=H; ++h, k<<=1)
+				for(size_t p=0; p<n; p+=k*2) {
 					mint cw = 1;
-					for(size_t i=0, j=k/2; j<k; ++i, ++j) {
-						mint v = cw*a[p+j], u = a[p+i];
-						a[p+i] = u + v;
-						a[p+j] = u - v;
+					for(size_t i=0; i<k; ++i) {
+						mint v = cw*a[p+i+k], &u = a[p+i];
+						a[p+i+k] = u - v;
+						u += v;
 						cw *= roots[h];
 					}
 				}
-			}
 		}
 		
 		void ntt_inv(vector<mint> &a) {
