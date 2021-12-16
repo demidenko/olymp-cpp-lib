@@ -1,5 +1,7 @@
-int inv_mod(int a, int m) { assert(0<a); assert(a<m);
-	return a==1 ? 1 : m - int64_t(m) * inv_mod(m%a, a) / a;
+optional<int> inv_mod(int a, int mod) {
+	int x = 1, y = 0, m = mod; if(a >= mod || a < -mod) a %= mod; if(a < 0) a += mod;
+	while(a) swap(x, y -= (m / a) * x), swap(a, m %= a);
+	if(m == 1) return y < 0 ? y + mod : y; else return nullopt;
 }
 
 template<decltype(auto) mod> struct modint { static_assert(is_same_v<remove_reference_t<decltype(mod)>, int>);
@@ -9,7 +11,7 @@ template<decltype(auto) mod> struct modint { static_assert(is_same_v<remove_refe
 	void operator+=(const modint &b) { x+=b.x; if(x>=mod) x-=mod; }
 	void operator-=(const modint &b) { x-=b.x; if(x<0) x+=mod; }
 	void operator*=(const modint &b) { x = int64_t(x)*b.x %mod; }
-	void operator/=(const modint &b) { x = int64_t(x)*inv_mod(b.x,mod) %mod; }
+	void operator/=(const modint &b) { auto i=inv_mod(b.x,mod); assert(i); x = int64_t(*i)*x %mod; }
 	friend modint operator+(modint a, const modint &b) { a+=b; return a; }
 	friend modint operator-(modint a, const modint &b) { a-=b; return a; }
 	friend modint operator*(modint a, const modint &b) { a*=b; return a; }
