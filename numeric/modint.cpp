@@ -7,7 +7,7 @@ optional<int> inv_mod(int a, int mod) {
 template<decltype(auto) mod> struct modint { static_assert(is_same_v<remove_reference_t<decltype(mod)>, int>);
 	modint(): x(0) {}
 	template<class T, class=enable_if_t<is_integral_v<T>>> modint(T val): x(val%mod) { if(x<0) x+=mod; }
-	static int get_mod() { return mod; }
+	static constexpr int get_mod() { return mod; }
 	void operator+=(const modint &b) { x+=b.x; if(x>=mod) x-=mod; }
 	void operator-=(const modint &b) { x-=b.x; if(x<0) x+=mod; }
 	void operator*=(const modint &b) { x = int64_t(x)*b.x %mod; }
