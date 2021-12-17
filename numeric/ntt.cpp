@@ -43,20 +43,23 @@ namespace NTT {
 	
 	namespace {
 		using ntt_mods = integer_sequence<int, 
+			998244353,
 			//754974721,
 			//985661441,
 			//943718401,
-			998244353,
 			897581057,
 			880803841
 		>;
 		
-		template<class T, int ...mod> constexpr bool is_ntt_modint(integer_sequence<int, mod...>) {
+		template<class T, int ...mod> constexpr bool is_valid_modint(integer_sequence<int, mod...>) {
 			return (is_same_v<T, modint<mod>> || ...);
 		}
+		template<class T> using is_ntt_modint = bool_constant<is_valid_modint<T>(ntt_mods{})>;
 		
 		template<int mod, class A>
 		vector<modint<mod>> convolution(const vector<A> &a, const vector<A> &b) {
+			if(size(a) < size(b)) return convolution<mod>(b, a);
+			if(empty(b)) return {};
 			size_t n = size(a), m = size(b), d = 1;
 			while(d < n+m-1) d<<=1; assert(d <= ntt_device<mod>::MAXN);
 			vector<modint<mod>> fa(d), fb(d);
@@ -78,9 +81,7 @@ namespace NTT {
 	
 	template<class T, class A>
 	vector<T> convolution(const vector<A> &a, const vector<A> &b) {
-		if(size(a) < size(b)) return convolution<T>(b, a);
-		if(empty(b)) return {};
-		if constexpr (is_ntt_modint<T>(ntt_mods{})) return convolution<T::get_mod()>(a, b);
+		if constexpr (is_ntt_modint<T>::value) return convolution<T::get_mod()>(a, b);
 		else return convolution<T>(a, b, ntt_mods{});
 	}
 }
