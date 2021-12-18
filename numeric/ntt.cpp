@@ -54,15 +54,11 @@ namespace NTT {
 		
 		template<size_t count, size_t min_h, int min_mod, size_t ...I>
 		constexpr auto __gen_ntt_mods(index_sequence<I...>) {
-			static_assert(min_h > min_adequate_h);
-			constexpr auto mods = []() {
+			constexpr auto mods = [] {
 				array<int, count> ar{};
-				for(int i=0, h=min_h; h<=30 && i < count; ++h)
-				for(int c = 1; c <= (numeric_limits<int>::max()>>(h+1)); c+=2) {
-					if(int mod = (c<<h) + 1; mod < min_mod || !is_ntt_prime(mod)) continue ;
-					else ar[i++] = mod;
-					if(i == count) break ;
-				}
+				for(size_t i=0, h=min_h; h<=30; ++h)
+				for(int c = 1; i < count && c <= (numeric_limits<int>::max()>>(h+1)); c+=2)
+				if(int mod = (c<<h)+1; mod >= min_mod && is_ntt_prime(mod)) ar[i++] = mod;
 				return ar;
 			}();
 			static_assert(mods[count-1] != 0, "Can't find enough required ntt mods");
