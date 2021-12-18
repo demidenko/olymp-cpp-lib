@@ -42,6 +42,15 @@ namespace NTT {
 	};
 	
 	namespace {
+		constexpr size_t min_adequate_h = 13;
+		constexpr bool is_ntt_prime(int p) {
+			if(p < 2 || p%2 == 0 || ctz(p-1) < min_adequate_h) return false;
+			for(int i=3; i*i*i*i<=p; i+=2) if(p%i == 0) return false;
+			int64_t r = 1, t = 2;
+			for(int n = p-1; n>0; n>>=1, t = t*t %p) if(n&1) r = r*t %p;
+			return r == 1;
+		}
+		
 		using ntt_mods = integer_sequence<int, 
 			998244353,
 			//754974721,
@@ -51,10 +60,8 @@ namespace NTT {
 			880803841
 		> ;
 		
-		template<class T, int ...mod> constexpr bool is_valid_modint(integer_sequence<int, mod...>) {
-			return (is_same_v<T, modint<mod>> || ...);
-		}
-		template<class T> using is_ntt_modint = bool_constant<is_valid_modint<T>(ntt_mods{})> ;
+		template<class T> struct is_ntt_modint: false_type {};
+		template<decltype(auto) mod> struct is_ntt_modint<modint<mod>>: bool_constant<is_same_v<decltype(mod),int> && is_ntt_prime(mod)> {};
 		
 		template<int mod> vector<modint<mod>> convolution(const vector<auto> &a, const vector<auto> &b) {
 			if(size(a) < size(b)) return convolution<mod>(b, a);
