@@ -1,5 +1,6 @@
 namespace NTT {
-	constexpr size_t ctz(int x) { return x%2 ? 0 : ctz(x>>1) + 1; }
+	constexpr size_t ctz(int n) { return n%2 ? 0 : ctz(n>>1) + 1; }
+	constexpr size_t lg_geq(int n) { return n < 2 ? 0 : lg_geq((n+1)>>1) + 1; }
 	
 	template<int mod> struct ntt_device {
 		using mint = modint<mod>;
@@ -51,23 +52,34 @@ namespace NTT {
 			return r == 1;
 		}
 		
-		using ntt_mods = integer_sequence<int, 
-			998244353,
-			//754974721,
-			//985661441,
-			//943718401,
-			897581057,
-			880803841
-		> ;
+		template<size_t count, size_t min_h, int min_mod, size_t ...I>
+		constexpr auto __gen_ntt_mods(index_sequence<I...>) {
+			static_assert(min_h > min_adequate_h);
+			constexpr auto mods = []() {
+				array<int, count> ar{};
+				for(int i=0, h=min_h; h<=30 && i < count; ++h)
+				for(int c = 1; c <= (numeric_limits<int>::max()>>(h+1)); c+=2) {
+					if(int mod = (c<<h) + 1; mod < min_mod || !is_ntt_prime(mod)) continue ;
+					else ar[i++] = mod;
+					if(i == count) break ;
+				}
+				return ar;
+			}();
+			static_assert(mods[count-1] != 0, "Can't find enough required ntt mods");
+			return integer_sequence<int, mods[I]...>{};
+		}
 		
-		template<class T> struct is_ntt_modint: false_type {};
-		template<decltype(auto) mod> struct is_ntt_modint<modint<mod>>: bool_constant<is_same_v<decltype(mod),int> && is_ntt_prime(mod)> {};
+		template<size_t count, size_t min_h, int min_mod>
+		using make_ntt_mods = decltype(__gen_ntt_mods<count, min_h, min_mod>(make_index_sequence<count>{}));
+		
+		template<class T, size_t min_h> struct is_ntt_modint: false_type {};
+		template<decltype(auto) mod, size_t min_h> struct is_ntt_modint<modint<mod>,min_h>: bool_constant<is_same_v<decltype(mod),int> && is_ntt_prime(mod) && ctz(mod-1)>=min_h> {};
 		
 		template<int mod> vector<modint<mod>> convolution(const vector<auto> &a, const vector<auto> &b) {
 			if(size(a) < size(b)) return convolution<mod>(b, a);
 			if(empty(b)) return {};
-			size_t n = size(a) + size(b) - 1, d = 1;
-			while(d < n) d<<=1; assert(d <= ntt_device<mod>::MAXN);
+			const size_t n = size(a)+size(b)-1, d = size_t(1)<<lg_geq(n);
+			assert(d <= ntt_device<mod>::MAXN);
 			vector<modint<mod>> fa(d), fb(d);
 			copy(begin(a), end(a), begin(fa));
 			copy(begin(b), end(b), begin(fb));
@@ -84,8 +96,10 @@ namespace NTT {
 		}
 	}
 	
-	template<class T> auto convolution(const vector<auto> &a, const vector<auto> &b) {
-		if constexpr (is_ntt_modint<T>::value) return convolution<T::get_mod()>(a, b);
-		else return convolution<T>(a, b, ntt_mods{});
+	template<class T, size_t max_size = 1<<23, size_t count_mods = 3, int min_mod = (int)8e8>
+	auto convolution(const vector<auto> &a, const vector<auto> &b) {
+		constexpr size_t h = max(lg_geq(max_size), min_adequate_h);
+		if constexpr (is_ntt_modint<T,h>::value) return convolution<T::get_mod()>(a, b);
+		else return convolution<T>(a, b, make_ntt_mods<count_mods, h, min_mod>{});
 	}
 }
