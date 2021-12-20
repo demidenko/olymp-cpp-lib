@@ -1,6 +1,6 @@
 template<class mint> optional<mint> sqrt(const mint &a) { //correct for prime mod
 	const int mod = mint::get_mod();
-	if((int)a < 2) return a;
+	if(*a < 2) return a;
 	if(pow(a, (mod-1)>>1) == -1) return nullopt;
 	int s = -1, t = mod - 1;
 	while(t%2 == 0) ++s, t>>=1;

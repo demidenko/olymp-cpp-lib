@@ -1,12 +1,11 @@
 struct crt_device {
 	template<class T, int mod0, int ...mod> 
 	static T evaluate(const modint<mod0> &a0, const modint<mod>& ...a) {
-		return evaluate<T>(((a - (int)a0) * get_inv<mod0, mod>())...) * T((int)mod0) + T((int)a0);
+		return evaluate<T>(((a - *a0) * get_inv<mod0, mod>())...) * T(mod0) + T(*a0);
 	}
 	
-	template<class T, int mod> static T evaluate(const modint<mod> &a0) {
-		return T((int)a0);
-	}
+	template<class T, int mod>
+	static T evaluate(const modint<mod> &a0) { return T(*a0); }
 	
 	template<class T, class mint0, class ...mint>
 	static vector<T> evaluate(const vector<mint0> &a0, const vector<mint>& ...a) {
