@@ -51,6 +51,11 @@ struct ilist_splay {
 		size_t operator-(const node_iterator &it) const {
 			return get_pos(t) - get_pos(it.t);
 		}
+		
+		ilist_splay get_ilist() const {
+            auto l = leftmost(splay(t)), r = rightmost(l);
+            return ilist_splay(l, r);
+        }
 	};
 
 	using iterator = node_iterator<T>;
@@ -112,9 +117,9 @@ struct ilist_splay {
 	iterator insert(iterator pos, ilist_splay &&a) { return insert(pos, split(a.__end).first); }
 
 	extracted extract(iterator first, iterator last) {
-		auto [pref, r] = split(last.t);
-		auto [l, mid] = split(first.t);
-		set_left(r, l);
+		auto [l, suf] = split(first.t);
+        auto [mid, r] = split(last.t);
+        set_left(r, l);
 		upd_sz(r);
 		__size -= sz(mid);
 		return extracted(mid);
@@ -148,7 +153,9 @@ struct ilist_splay {
 		set_left(__end, v);
 		upd_sz(__end);
 	}
-
+	
+	ilist_splay(node *b, node *e): __end(splay(e)), __size(sz(__end) - 1) {}
+	
 	node* init_nodes(size_t n) {
 		node *nodes = new node[n+1];
 		T *values = new T[n];
@@ -160,6 +167,7 @@ struct ilist_splay {
 	}
 
 	iterator insert(iterator it, node *v) {
+		if(v == nullptr) return it;
 		__size += sz(v);
 		auto [l, r] = split(it.t);
 		v = leftmost(v);
