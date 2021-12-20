@@ -1,6 +1,6 @@
 template<class T>
 struct ilist_splay {
-
+	
 	struct node {
 		private: friend ilist_splay;
 		node *l, *r, *p;
@@ -9,7 +9,7 @@ struct ilist_splay {
 		node(const T &x): node(new T(x)) {}
 		node(T *ptr = nullptr): l(nullptr), r(nullptr), p(nullptr), sz(1), value(ptr) { }
 	};
-
+	
 	template<class V>
 	struct node_iterator: public std::iterator<std::random_access_iterator_tag, V, size_t> {
 		private: friend ilist_splay;
@@ -20,61 +20,61 @@ struct ilist_splay {
 		V& operator*() { return *t->value; }
 		bool operator==(const node_iterator &it) { return t == it.t; }
 		bool operator!=(const node_iterator &it) { return t != it.t; }
-
+		
 		node_iterator& operator++() {
 			for(;; rotate_big(t, t->p, t->p->p)) {
 				if(t->r) return t = leftmost(t->r), *this;
 				if(t->p->l == t) return t = t->p, *this;
 			}
 		}
-
+		
 		node_iterator& operator--() {
 			for(;; rotate_big(t, t->p, t->p->p)) {
 				if(t->l) return t = rightmost(t->l), *this;
 				if(t->p->r == t) return t = t->p, *this;
 			}
 		}
-
+		
 		node_iterator& operator+=(size_t n) {
 			if(n > 0) splay(t), t = nth(t->r, n-1);
 			return *this;
 		}
-
+		
 		node_iterator& operator-=(size_t n) {
 			if(n > 0) splay(t), t = nth(t->l, sz(t->l)-n);
 			return *this;
 		}
-
+		
 		node_iterator operator+(size_t n) const { return node_iterator(t)+=n; }
 		node_iterator operator-(size_t n) const { return node_iterator(t)-=n; }
-
+		
 		size_t operator-(const node_iterator &it) const {
 			return get_pos(t) - get_pos(it.t);
 		}
 		
 		ilist_splay get_ilist() const {
-            auto l = leftmost(splay(t)), r = rightmost(l);
-            return ilist_splay(l, r);
-        }
+			auto l = leftmost(splay(t)), r = rightmost(l);
+			return ilist_splay(l, r);
+		}
 	};
-
+	
 	using iterator = node_iterator<T>;
 	using const_iterator = node_iterator<const T>;
-
+	
 	struct extracted {
 		private: friend ilist_splay;
 		extracted(node *ptr): t(ptr) {}
 		node *t;
 	};
-
-
+	
+	
 	ilist_splay(): __end(new node()), __size(0) {}
-
+	
 	explicit ilist_splay(size_t n, const T &value = {}) {
 		node* nodes = init_nodes(n);
 		for(size_t i=0; i<n; ++i) *nodes[i].value = value;
 	}
-
+	
 	template<class _InputIterator, class = std::_RequireInputIter<_InputIterator>>
 	ilist_splay(_InputIterator first, _InputIterator last) {
 		size_t n = std::distance(first, last);
@@ -90,36 +90,36 @@ struct ilist_splay {
 	
 	ilist_splay& operator=(const ilist_splay &a) = delete ;
 	ilist_splay& operator=(ilist_splay &&a) = default ;
-
+	
 	size_t size() const { return __size; }
 	bool empty() const { return __size == 0; }
-
+	
 	void clear() {
 		split(__end);
 		__size = 0;
 	}
-
+	
 	iterator begin() { return leftmost(splay(__end)); }
 	iterator end() { return __end; }
 	const_iterator begin() const { return leftmost(splay(__end)); }
 	const_iterator end() const { return __end; }
-
+	
 	iterator at(size_t pos) { return nth(splay(__end), pos); }
 	const_iterator at(size_t pos) const { return nth(splay(__end), pos); }
-
+	
 	T& operator[](size_t pos) { return *at(pos); }
 	const T& operator[](size_t pos) const { return *at(pos); }
-
+	
 	void push_back(const T &x) { insert(__end, x); }
 	iterator insert(iterator pos, const T &x) { return insert(pos, new node(x)); }
 	iterator insert(iterator pos, iterator it) { return insert(pos, it.t); }
 	iterator insert(iterator pos, extracted e) { return insert(pos, e.t); }
 	iterator insert(iterator pos, ilist_splay &&a) { return insert(pos, split(a.__end).first); }
-
+	
 	extracted extract(iterator first, iterator last) {
 		auto [l, suf] = split(first.t);
-        auto [mid, r] = split(last.t);
-        set_left(r, l);
+		auto [mid, r] = split(last.t);
+		set_left(r, l);
 		upd_sz(r);
 		__size -= sz(mid);
 		return extracted(mid);
@@ -128,7 +128,7 @@ struct ilist_splay {
 	ilist_splay erase(iterator first, iterator last) {
 		return ilist_splay(extract(first, last).t);
 	}
-
+	
 	iterator erase(iterator it) {
 		node *t = splay(it.t);
 		assert(t != __end);
@@ -165,7 +165,7 @@ struct ilist_splay {
 		build(nodes, __end + 1);
 		return nodes;
 	}
-
+	
 	iterator insert(iterator it, node *v) {
 		if(v == nullptr) return it;
 		__size += sz(v);
@@ -177,12 +177,12 @@ struct ilist_splay {
 		upd_sz(r);
 		return iterator(v);
 	}
-
+	
 	static inline size_t sz(node *t) { return t ? t->sz : 0; }
 	static inline void set_left(node *v, node *to) { v->l = to; if(to) to->p = v; }
 	static inline void set_right(node *v, node *to) { v->r = to; if(to) to->p = v; }
 	static inline void upd_sz(node *t) { if(t) t->sz = sz(t->l) + sz(t->r) + 1; }
-
+	
 	static node* leftmost(node *t) {
 		while(t->l) rotate_right(t), t = t->p;
 		return t;
@@ -192,12 +192,12 @@ struct ilist_splay {
 		while(t->r) rotate_left(t), t = t->p;
 		return t;
 	}
-
+	
 	static size_t get_pos(node *t) {
 		splay(t);
 		return sz(t->l);
 	}
-
+	
 	static node* nth(node *v, size_t n) {
 		assert(n < sz(v));
 		for(;;) {
@@ -207,20 +207,20 @@ struct ilist_splay {
 			else n -= sl+1, v = v->r;
 		}
 	}
-
+	
 	static void upd_after_rotate(node *x, node *y, node *p) {
 		if(p) p->l == x ? set_left(p, y) : set_right(p, y); else y->p = nullptr;
 		upd_sz(x);
 		upd_sz(y);
 	}
-
+	
 	static void rotate_left(node *x) {
 		node *p = x->p, *r = x->r;
 		set_right(x, r->l);
 		set_left(r, x);
 		upd_after_rotate(x, r, p);
 	}
-
+	
 	static void rotate_right(node *x) {
 		node *p = x->p, *l = x->l;
 		set_left(x, l->r);
@@ -241,7 +241,7 @@ struct ilist_splay {
 		upd_sz(p);
 		upd_sz(x);
 	}
-
+	
 	static node* splay(node *x) {
 		while(x->p) {
 			node *p = x->p, *g = p->p;
@@ -251,7 +251,7 @@ struct ilist_splay {
 		}
 		return x;
 	}
-
+	
 	static pair<node*,node*> split(node *s) {
 		node *l = splay(s)->l;
 		if(l) {
@@ -260,7 +260,7 @@ struct ilist_splay {
 		}
 		return {l, s};
 	}
-
+	
 	static node* build(node *l, node *r) {
 		size_t n = r - l;
 		if(n == 0) return nullptr;
