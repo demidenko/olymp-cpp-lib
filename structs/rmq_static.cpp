@@ -1,13 +1,11 @@
 template<class T, const T& f(const T&, const T&) = std::min<T> >
 struct rmq {
 	rmq() {}
-	rmq(const vector<T> &vals) {
-		size_t n = size(vals), L = n ? __lg(n) + 1 : 1;
-		t.resize(L); 
+	rmq(const vector<T> &vals): t(empty(vals) ? 1 : __lg(size(vals)) + 1) {
 		t[0] = vals;
-		for(size_t p=1, k=1; k<L; ++k, p<<=1){
-			vector<T> &a = t[k], &b = t[k-1];
-			a.resize(n-p*2+1);
+		for(size_t k=1, p=1; k<size(t); ++k, p<<=1) {
+			auto &a = t[k], &b = t[k-1];
+			a.resize(size(vals)-p*2+1);
 			for(size_t i=0; i<size(a); ++i) a[i] = f(b[i], b[i+p]);
 		}
 	}
