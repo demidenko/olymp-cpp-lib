@@ -48,7 +48,7 @@ struct ilist_splay {
 		node_iterator operator+(size_t n) const { return node_iterator(t)+=n; }
 		node_iterator operator-(size_t n) const { return node_iterator(t)-=n; }
 		
-		size_t operator-(const node_iterator &it) const {
+		ptrdiff_t operator-(const node_iterator &it) const {
 			return get_pos(t) - get_pos(it.t);
 		}
 		
@@ -193,9 +193,8 @@ struct ilist_splay {
 		return t;
 	}
 	
-	static size_t get_pos(node *t) {
-		splay(t);
-		return sz(t->l);
+	static inline ptrdiff_t get_pos(node *t) {
+		return sz(splay(t)->l);
 	}
 	
 	static node* nth(node *v, size_t n) {
@@ -241,10 +240,7 @@ struct ilist_splay {
 	}
 	
 	static node* splay(node *x) {
-		while(x->p) {
-			if(node *p = x->p; p->p) rotate_big(x);
-			else p->l == x ? rotate_right(p) : rotate_left(p);
-		}
+		while(node *p = x->p) p->p ? rotate_big(x) : p->l == x ? rotate_right(p) : rotate_left(p);
 		return x;
 	}
 	
