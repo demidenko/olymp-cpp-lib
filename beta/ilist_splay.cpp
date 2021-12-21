@@ -6,7 +6,6 @@ struct ilist_splay {
 		node *l, *r, *p;
 		size_t sz;
 		T *value;
-		node(const T &x): node(new T(x)) {}
 		node(T *ptr = nullptr): l(nullptr), r(nullptr), p(nullptr), sz(1), value(ptr) { }
 	};
 	
@@ -68,18 +67,15 @@ struct ilist_splay {
 	};
 	
 	
-	ilist_splay(): __end(new node()), __size(0) {}
+	ilist_splay(): __end(new_node()), __size(0) {}
 	
 	explicit ilist_splay(size_t n, const T &value = {}) {
-		node* nodes = init_nodes(n);
-		for(size_t i=0; i<n; ++i) *nodes[i].value = value;
+		create_nodes_with_end(n, [&value](auto &x){ x = value; });
 	}
 	
 	template<class _InputIterator, class = std::_RequireInputIter<_InputIterator>>
 	ilist_splay(_InputIterator first, _InputIterator last) {
-		size_t n = std::distance(first, last);
-		node* nodes = init_nodes(n);
-		for(size_t i=0; i<n; ++i, ++first) *nodes[i].value = *first;
+		create_nodes_with_end(std::distance(first, last), [&first](auto &x){ x = *first++; });
 	}
 	
 	ilist_splay(extracted e): ilist_splay(e.t) {}
@@ -111,7 +107,7 @@ struct ilist_splay {
 	const T& operator[](size_t pos) const { return *at(pos); }
 	
 	void push_back(const T &x) { insert(__end, x); }
-	iterator insert(iterator pos, const T &x) { return insert(pos, new node(x)); }
+	iterator insert(iterator pos, const T &x) { return insert(pos, new_node(x)); }
 	iterator insert(iterator pos, iterator it) { return insert(pos, it.t); }
 	iterator insert(iterator pos, extracted e) { return insert(pos, e.t); }
 	iterator insert(iterator pos, ilist_splay &&a) { return insert(pos, split(a.__end).first); }
@@ -155,16 +151,6 @@ struct ilist_splay {
 	}
 	
 	ilist_splay(node *b, node *e): __end(splay(e)), __size(sz(__end) - 1) {}
-	
-	node* init_nodes(size_t n) {
-		node *nodes = new node[n+1];
-		T *values = new T[n];
-		for(size_t i=0; i<n; ++i) nodes[i].value = values + i;
-		__end = nodes + n;
-		__size = n;
-		build(nodes, __end + 1);
-		return nodes;
-	}
 	
 	iterator insert(iterator it, node *v) {
 		if(v == nullptr) return it;
@@ -250,14 +236,47 @@ struct ilist_splay {
 		return {l, s};
 	}
 	
-	static node* build(node *l, node *r) {
-		size_t n = r - l;
-		if(n == 0) return nullptr;
-		node *mid = l + n/2;
-		set_left(mid, build(l, mid));
-		set_right(mid, build(mid+1, r));
-		upd_sz(mid);
-		return mid;
+	
+	void create_nodes_with_end(size_t n, auto set_value) {
+		node *v = build(n, set_value);
+		__size = n;
+		__end = new_node();
+		set_left(__end, v);
+		upd_sz(__end);
 	}
+	
+	static node* build(size_t n, auto set_value) {
+		if(n == 0) return nullptr;
+		node *v = new_node(), *l = build((n-1)/2, set_value);
+		set_value(*v->value);
+		set_left(v, l);
+		set_right(v, build((n-1)-sz(l), set_value));
+		upd_sz(v);
+		return v;
+	}
+	
+	static node* new_node(const T &x) {
+		node *t = new_node();
+		*t->value = x;
+		return t;
+	}
+	
+	static node* new_node() {
+		static constexpr size_t sz_ext = 1<<15;
+		if(nodes_pool.empty()) {
+			nodes_pool.resize(sz_ext);
+			node *nodes = new node[sz_ext];
+			T *values = new T[sz_ext];
+			for(size_t i=0; i<sz_ext; ++i) {
+				nodes[i].value = values + i;
+				nodes_pool[i] = nodes + i;
+			}
+		}
+		node *t = nodes_pool.back();
+		nodes_pool.pop_back();
+		return t;
+	}
+	
+	static inline vector<node*> nodes_pool = {};
 };
-//template<class T> using ilist = ilist_splay<T>;
+template<class T> using ilist = ilist_splay<T>;
