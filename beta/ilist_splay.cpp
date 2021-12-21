@@ -22,14 +22,14 @@ struct ilist_splay {
 		bool operator!=(const node_iterator &it) { return t != it.t; }
 		
 		node_iterator& operator++() {
-			for(;; rotate_big(t, t->p, t->p->p)) {
+			for(;; rotate_big(t)) {
 				if(t->r) return t = leftmost(t->r), *this;
 				if(t->p->l == t) return t = t->p, *this;
 			}
 		}
 		
 		node_iterator& operator--() {
-			for(;; rotate_big(t, t->p, t->p->p)) {
+			for(;; rotate_big(t)) {
 				if(t->l) return t = rightmost(t->l), *this;
 				if(t->p->r == t) return t = t->p, *this;
 			}
@@ -172,9 +172,8 @@ struct ilist_splay {
 		auto [l, r] = split(it.t);
 		v = leftmost(v);
 		set_left(v, l);
-		upd_sz(v);
 		set_left(r, v);
-		upd_sz(r);
+		upd_sz(v, r);
 		return iterator(v);
 	}
 	
@@ -182,6 +181,7 @@ struct ilist_splay {
 	static inline void set_left(node *v, node *to) { v->l = to; if(to) to->p = v; }
 	static inline void set_right(node *v, node *to) { v->r = to; if(to) to->p = v; }
 	static inline void upd_sz(node *t) { if(t) t->sz = sz(t->l) + sz(t->r) + 1; }
+	static inline auto upd_sz(auto... t) -> enable_if_t<(is_same_v<decltype(t), node*> && ...)> { (upd_sz(t), ...); }
 	
 	static node* leftmost(node *t) {
 		while(t->l) rotate_right(t), t = t->p;
@@ -208,10 +208,9 @@ struct ilist_splay {
 		}
 	}
 	
-	static void upd_after_rotate(node *x, node *y, node *p) {
+	static inline void upd_after_rotate(node *x, node *y, node *p) {
 		if(p) p->l == x ? set_left(p, y) : set_right(p, y); else y->p = nullptr;
-		upd_sz(x);
-		upd_sz(y);
+		upd_sz(x, y);
 	}
 	
 	static void rotate_left(node *x) {
@@ -228,8 +227,9 @@ struct ilist_splay {
 		upd_after_rotate(x, l, p);
 	}
 	
-	static void rotate_big(node *x, node *p, node *g) {
-		if(node *gg = g->p) gg->l == g ? set_left(gg, x) : set_right(gg, x); else x->p = nullptr;
+	static void rotate_big(node *x) {
+		auto p = x->p, g = p->p, gg = g->p;
+		if(gg) gg->l == g ? set_left(gg, x) : set_right(gg, x); else x->p = nullptr;
 		if(g->l == p) {
 			if(p->l == x) set_left(g, p->r), set_left(p, x->r), set_right(p, g), set_right(x, p);
 			else set_left(g, x->r), set_right(p, x->l), set_left(x, p), set_right(x, g);
@@ -237,27 +237,20 @@ struct ilist_splay {
 			if(p->l == x) set_right(g, x->l), set_left(p, x->r), set_right(x, p), set_left(x, g);
 			else set_right(g, p->l), set_right(p, x->l), set_left(p, g), set_left(x, p);
 		}
-		upd_sz(g);
-		upd_sz(p);
-		upd_sz(x);
+		upd_sz(g, p, x);
 	}
 	
 	static node* splay(node *x) {
 		while(x->p) {
-			node *p = x->p, *g = p->p;
-			if(g) rotate_big(x, p, g);
-			else if(p->l == x) rotate_right(p);
-			else rotate_left(p);
+			if(node *p = x->p; p->p) rotate_big(x);
+			else p->l == x ? rotate_right(p) : rotate_left(p);
 		}
 		return x;
 	}
 	
 	static pair<node*,node*> split(node *s) {
 		node *l = splay(s)->l;
-		if(l) {
-			l->p = s->l = nullptr;
-			upd_sz(s);
-		}
+		if(l) l->p = s->l = nullptr, upd_sz(s);
 		return {l, s};
 	}
 	
