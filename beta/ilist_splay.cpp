@@ -71,15 +71,10 @@ struct ilist_splay {
 	
 	
 	ilist_splay(): __end(new_node()), __size(0) {}
+	explicit ilist_splay(size_t n, const T &value = {}): ilist_splay() { resize(n, value); }
 	
-	explicit ilist_splay(size_t n, const T &value = {}) {
-		create_nodes_with_end(n, [&value](auto &x){ x = value; });
-	}
-	
-	template<class _InputIterator, class = std::_RequireInputIter<_InputIterator>>
-	ilist_splay(_InputIterator first, _InputIterator last) {
-		create_nodes_with_end(std::distance(first, last), [&first](auto &x){ x = *first++; });
-	}
+	template<class I, class = std::_RequireInputIter<I>>
+	ilist_splay(I first, I last): ilist_splay(std::distance(first, last)) { for(T& x : *this) x = *first++; }
 	
 	ilist_splay(extracted e): ilist_splay(e.t) {}
 	
@@ -93,11 +88,6 @@ struct ilist_splay {
 	size_t size() const { return __size; }
 	bool empty() const { return __size == 0; }
 	
-	void clear() {
-		split(__end);
-		__size = 0;
-	}
-	
 	iterator begin() { return leftmost(splay(__end)); }
 	iterator end() { return __end; }
 	const_iterator begin() const { return leftmost(splay(__end)); }
@@ -108,6 +98,10 @@ struct ilist_splay {
 	
 	T& operator[](size_t pos) { return *at(pos); }
 	const T& operator[](size_t pos) const { return *at(pos); }
+	
+	void clear() { resize(0); }
+	void resize(size_t n) { if(n > __size) resize_more(n, T{}); else resize_less(n); }
+	void resize(size_t n, const T &value) { if(n > __size) resize_more(n, value); else resize_less(n); }
 	
 	void push_back(const T &x) { insert(__end, x); }
 	iterator insert(iterator pos, const T &x) { return insert(pos, new_node(x)); }
@@ -164,6 +158,22 @@ struct ilist_splay {
 		set_left(r, v);
 		upd_sz(v, r);
 		return iterator(v);
+	}
+	
+	void resize_less(size_t n) { assert(n <= __size);
+		auto [v, t] = split(nth(splay(__end), n));
+		for(iterator it=t; it.t!=__end; ) remove_node((it++).t);
+		set_left(splay(__end), v);
+		upd_sz(__end);
+		__size = n;
+	}
+	
+	void resize_more(size_t n, const T &value) { assert(n >= __size);
+		node *v = leftmost(build(n - __size, [&value](auto &x){ x = value; }));
+		set_left(v, split(__end).first);
+		set_left(__end, v);
+		upd_sz(v, __end);
+		__size = n;
 	}
 	
 	static inline size_t sz(node *t) { return t ? t->sz : 0; }
@@ -239,18 +249,10 @@ struct ilist_splay {
 		return {l, s};
 	}
 	
-	
-	void create_nodes_with_end(size_t n, auto set_value) {
-		node *v = build(n, set_value);
-		__size = n;
-		__end = new_node();
-		set_left(__end, v);
-		upd_sz(__end);
-	}
-	
 	static node* build(size_t n, auto set_value) {
 		if(n == 0) return nullptr;
 		node *v = new_node(), *l = build((n-1)/2, set_value);
+		v->value = new_value();
 		set_value(*v->value);
 		set_left(v, l);
 		set_right(v, build((n-1)-sz(l), set_value));
@@ -260,26 +262,33 @@ struct ilist_splay {
 	
 	static node* new_node(const T &x) {
 		node *t = new_node();
+		t->value = new_value();
 		*t->value = x;
 		return t;
 	}
 	
-	static node* new_node() {
-		static constexpr size_t sz_ext = 1<<15;
-		if(nodes_pool.empty()) {
-			nodes_pool.resize(sz_ext);
-			node *nodes = new node[sz_ext];
-			T *values = new T[sz_ext];
-			for(size_t i=0; i<sz_ext; ++i) {
-				nodes[i].value = values + i;
-				nodes_pool[i] = nodes + i;
-			}
-		}
-		node *t = nodes_pool.back();
-		nodes_pool.pop_back();
-		return t;
+	static node* new_node() { if(node *v = pointers_manager<node>::new_ptr()) return *v = node(), v; }
+	static T* new_value() { return pointers_manager<T>::new_ptr(); }
+	static void remove_node(node *v) {
+		if(v->value) pointers_manager<T>::free_ptr(v->value);
+		pointers_manager<node>::free_ptr(v);
 	}
 	
-	static inline vector<node*> nodes_pool = {};
+	template<class R, size_t pool_sz_ext = (1<<15)> struct pointers_manager {
+		static inline vector<R*> ptr_pool = {};
+		static R* new_ptr() {
+			if(ptr_pool.empty()) {
+				ptr_pool.resize(pool_sz_ext);
+				R *ptrs = new R[pool_sz_ext];
+				for(size_t i=pool_sz_ext; i--; ) ptr_pool[i] = ptrs + i;
+			}
+			R *ptr = ptr_pool.back();
+			ptr_pool.pop_back();
+			return ptr;
+		}
+		static void free_ptr(R *ptr) {
+			ptr_pool.push_back(ptr);
+		}
+	};
 };
-template<class T> using ilist = ilist_splay<T>;
+//template<class T> using ilist = ilist_splay<T>;
