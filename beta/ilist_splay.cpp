@@ -106,10 +106,11 @@ struct ilist_splay {
 	void push_back(const T &x) { insert(__end, x); }
 	iterator insert(iterator pos, const T &x) { return insert(pos, new_node(x)); }
 	iterator insert(iterator pos, iterator it) { return insert(pos, it.t); }
-	iterator insert(iterator pos, extracted e) { return insert(pos, splay(e.t)); }
+	iterator insert(iterator pos, extracted e) { return e.t ? insert(pos, splay(e.t)) : pos; }
 	iterator insert(iterator pos, ilist_splay &&a) { return insert(pos, split(a.__end).first); }
 	
 	extracted extract(iterator first, iterator last) {
+		assert(first.t != __end);
 		auto [l, suf] = split(first.t);
 		auto [mid, r] = split(last.t);
 		set_left(r, l);
@@ -118,15 +119,12 @@ struct ilist_splay {
 		return extracted(mid);
 	}
 	
-	ilist_splay erase(iterator first, iterator last) {
-		return ilist_splay(extract(first, last).t);
-	}
+	ilist_splay erase(iterator first, iterator last) { return extract(first, last); }
 	
 	iterator erase(iterator it) {
-		node *t = splay(it.t);
-		assert(t != __end);
-		node *l = t->l, *r = t->r;
-		t->r = t->l = r->p = nullptr;
+		assert(it.t != __end);
+		node *t = splay(it.t), *l = t->l, *r = t->r;
+		t->r = t->l = t->p = r->p = nullptr;
 		upd_sz(t);
 		if(l) {
 			r = leftmost(r);
