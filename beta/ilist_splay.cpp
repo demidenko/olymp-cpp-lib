@@ -34,6 +34,9 @@ struct ilist_splay {
 			}
 		}
 		
+		node_iterator operator++(int) { node* r = t; ++*this; return r; }
+		node_iterator operator--(int) { node* r = t; --*this; return r; }
+		
 		node_iterator& operator+=(size_t n) {
 			if(n > 0) splay(t), t = nth(t->r, n-1);
 			return *this;
