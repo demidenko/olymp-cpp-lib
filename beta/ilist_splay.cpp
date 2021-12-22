@@ -110,7 +110,6 @@ struct ilist_splay {
 	iterator insert(iterator pos, ilist_splay &&a) { return insert(pos, split(a.__end).first); }
 	
 	extracted extract(iterator first, iterator last) {
-		assert(first.t != __end);
 		auto [l, suf] = split(first.t);
 		auto [mid, r] = split(last.t);
 		set_left(r, l);
