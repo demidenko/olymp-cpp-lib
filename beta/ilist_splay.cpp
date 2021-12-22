@@ -100,13 +100,13 @@ struct ilist_splay {
 	const T& operator[](size_t pos) const { return *at(pos); }
 	
 	void clear() { resize(0); }
-	void resize(size_t n) { if(n > __size) resize_more(n, T{}); else resize_less(n); }
-	void resize(size_t n, const T &value) { if(n > __size) resize_more(n, value); else resize_less(n); }
+	void resize(size_t n) { if(n > __size) resize_more(n, T{}); else if(n < __size) resize_less(n); }
+	void resize(size_t n, const T &value) { if(n > __size) resize_more(n, value); else if(n < __size) resize_less(n); }
 	
 	void push_back(const T &x) { insert(__end, x); }
 	iterator insert(iterator pos, const T &x) { return insert(pos, new_node(x)); }
 	iterator insert(iterator pos, iterator it) { return insert(pos, it.t); }
-	iterator insert(iterator pos, extracted e) { return insert(pos, e.t); }
+	iterator insert(iterator pos, extracted e) { return insert(pos, splay(e.t)); }
 	iterator insert(iterator pos, ilist_splay &&a) { return insert(pos, split(a.__end).first); }
 	
 	extracted extract(iterator first, iterator last) {
@@ -126,16 +126,18 @@ struct ilist_splay {
 		node *t = splay(it.t);
 		assert(t != __end);
 		node *l = t->l, *r = t->r;
-		t->sz = 1;
 		t->r = t->l = r->p = nullptr;
+		upd_sz(t);
 		if(l) {
 			r = leftmost(r);
 			set_left(r, l);
 			upd_sz(r);
 		}
 		--__size;
-		return iterator(t);
+		return it;
 	}
+	
+	void remove(iterator it) { remove_node(erase(it).t); }
 	
 	private:
 	node * __end;
