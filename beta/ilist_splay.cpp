@@ -51,7 +51,7 @@ struct ilist_splay {
 		node_iterator operator-(size_t n) const { return node_iterator(t)-=n; }
 		
 		ptrdiff_t operator-(const node_iterator &it) const {
-			return get_pos(t) - get_pos(it.t);
+			return position(t) - position(it.t);
 		}
 		
 		ilist_splay& get_ilist_ref() {
@@ -74,16 +74,14 @@ struct ilist_splay {
 	explicit ilist_splay(size_t n, const T &value = {}): ilist_splay() { resize(n, value); }
 	
 	template<class I, class = std::_RequireInputIter<I>>
-	ilist_splay(I first, I last): ilist_splay(std::distance(first, last)) { for(T& x : *this) x = *first++; }
+	ilist_splay(I first, I last): ilist_splay() { assign(first, last); }
 	
-	~ilist_splay() { if(__end) { clear(); __end->value = nullptr; remove_node(__end); __end = nullptr; } }
-	
+	ilist_splay(ilist_splay &&a) { *this = std::move(a); }
 	ilist_splay& operator=(ilist_splay &&a) {
 		__end = make_end_node(exchange(a.__end, nullptr), this);
 		__size = a.__size;
 		return *this;
 	}
-	ilist_splay(ilist_splay &&a) { *this = std::move(a); }
 	
 	ilist_splay(const ilist_splay &a) = delete ;
 	ilist_splay& operator=(const ilist_splay &a) = delete ;
@@ -105,6 +103,10 @@ struct ilist_splay {
 	void clear() { resize(0); }
 	void resize(size_t n) { if(n > __size) resize_more(n, T{}); else if(n < __size) resize_less(n); }
 	void resize(size_t n, const T &value) { if(n > __size) resize_more(n, value); else if(n < __size) resize_less(n); }
+	
+	template<class I, class = std::_RequireInputIter<I>>
+	void assign(I first, I last) { resize(std::distance(first, last)); for(T &x : *this) x = *first++; }
+	void assign(size_t n, const T &value) { resize(n, value); }
 	
 	void push_back(const T &x) { insert(__end, x); }
 	iterator insert(iterator pos, const T &x) { return insert(pos, new_node(x)); }
@@ -179,8 +181,7 @@ struct ilist_splay {
 	static inline size_t sz(node *t) { return t ? t->sz : 0; }
 	static inline void set_left(node *v, node *to) { v->l = to; if(to) to->p = v; }
 	static inline void set_right(node *v, node *to) { v->r = to; if(to) to->p = v; }
-	static inline void upd_sz(node *t) { if(t) t->sz = sz(t->l) + sz(t->r) + 1; }
-	static inline auto upd_sz(auto... t) -> enable_if_t<(is_same_v<decltype(t), node*> && ...)> { (upd_sz(t), ...); }
+	static inline void upd_sz(auto... t) { ((t->sz = sz(t->l) + sz(t->r) + 1), ...); }
 	
 	static node* leftmost(node *t) {
 		while(t->l) rotate_right(t), t = t->p;
@@ -192,18 +193,11 @@ struct ilist_splay {
 		return t;
 	}
 	
-	static inline ptrdiff_t get_pos(node *t) {
-		return sz(splay(t)->l);
-	}
+	static inline ptrdiff_t position(node *t) { return sz(splay(t)->l); }
 	
 	static node* nth(node *v, size_t n) {
 		assert(n < sz(v));
-		for(;;) {
-			size_t sl = sz(v->l);
-			if(n == sl) return splay(v);
-			if(n < sl) v = v->l;
-			else n -= sl+1, v = v->r;
-		}
+		for(size_t sl; ; v = n<sl ? v->l : (n-=sl+1, v->r)) if(n == (sl=sz(v->l))) return splay(v);
 	}
 	
 	static inline void upd_after_rotate(node *x, node *y, node *p) {
@@ -260,6 +254,8 @@ struct ilist_splay {
 		return v;
 	}
 	
+	static node* make_end_node(node *end, ilist_splay *list) { end->value = (T*)list; return end; }
+	
 	static node* new_node(const T &x) {
 		node *t = new_node();
 		t->value = new_value();
@@ -274,11 +270,6 @@ struct ilist_splay {
 		pointers_manager<node>::free_ptr(v);
 	}
 	
-	static node* make_end_node(node *end, ilist_splay *list) {
-		end->value = (T*)list;
-		return end;
-	}
-	
 	template<class R, size_t pool_sz_ext = (1<<15)> struct pointers_manager {
 		static inline vector<R*> ptr_pool = {};
 		static R* new_ptr() {
@@ -291,9 +282,9 @@ struct ilist_splay {
 			ptr_pool.pop_back();
 			return ptr;
 		}
-		static void free_ptr(R *ptr) {
-			ptr_pool.push_back(ptr);
-		}
+		static void free_ptr(R *ptr) { ptr_pool.push_back(ptr); }
 	};
+	
+	public: ~ilist_splay() { if(__end) { clear(); __end->value = nullptr; remove_node(__end); __end = nullptr; } }
 };
 //template<class T> using ilist = ilist_splay<T>;
