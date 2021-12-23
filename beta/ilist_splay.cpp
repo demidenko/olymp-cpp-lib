@@ -54,9 +54,8 @@ struct ilist_splay {
 			return get_pos(t) - get_pos(it.t);
 		}
 		
-		ilist_splay get_ilist() const {
-			auto l = leftmost(splay(t)), r = rightmost(l);
-			return ilist_splay(l, r);
+		ilist_splay& get_ilist_ref() {
+			return *((ilist_splay<T>*)(rightmost(splay(t))->value));
 		}
 	};
 	
@@ -70,20 +69,24 @@ struct ilist_splay {
 	};
 	
 	
-	ilist_splay(): __end(new_node()), __size(0) {}
+	ilist_splay(): __end(make_end_node(new_node(),this)), __size(0) {}
+	ilist_splay(extracted e): ilist_splay(e.t) {}
 	explicit ilist_splay(size_t n, const T &value = {}): ilist_splay() { resize(n, value); }
 	
 	template<class I, class = std::_RequireInputIter<I>>
 	ilist_splay(I first, I last): ilist_splay(std::distance(first, last)) { for(T& x : *this) x = *first++; }
 	
-	ilist_splay(extracted e): ilist_splay(e.t) {}
+	~ilist_splay() { if(__end) { clear(); __end->value = nullptr; remove_node(__end); __end = nullptr; } }
+	
+	ilist_splay& operator=(ilist_splay &&a) {
+		__end = make_end_node(exchange(a.__end, nullptr), this);
+		__size = a.__size;
+		return *this;
+	}
+	ilist_splay(ilist_splay &&a) { *this = std::move(a); }
 	
 	ilist_splay(const ilist_splay &a) = delete ;
-	
-	ilist_splay(ilist_splay &&a): __end(exchange(a.__end, nullptr)), __size(a.__size) {}
-	
 	ilist_splay& operator=(const ilist_splay &a) = delete ;
-	ilist_splay& operator=(ilist_splay &&a) = default ;
 	
 	size_t size() const { return __size; }
 	bool empty() const { return __size == 0; }
@@ -145,8 +148,6 @@ struct ilist_splay {
 		set_left(__end, v);
 		upd_sz(__end);
 	}
-	
-	ilist_splay(node *b, node *e): __end(splay(e)), __size(sz(__end) - 1) {}
 	
 	iterator insert(iterator it, node *v) {
 		if(v == nullptr) return it;
@@ -271,6 +272,11 @@ struct ilist_splay {
 	static void remove_node(node *v) {
 		if(v->value) pointers_manager<T>::free_ptr(v->value);
 		pointers_manager<node>::free_ptr(v);
+	}
+	
+	static node* make_end_node(node *end, ilist_splay *list) {
+		end->value = (T*)list;
+		return end;
 	}
 	
 	template<class R, size_t pool_sz_ext = (1<<15)> struct pointers_manager {
