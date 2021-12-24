@@ -73,10 +73,10 @@ struct ilist_splay {
 	ilist_splay(extracted e): ilist_splay(e.t) {}
 	explicit ilist_splay(size_t n, const T &value = {}): ilist_splay() { resize(n, value); }
 	
-	template<class I, class = std::_RequireInputIter<I>>
+	template<class I, class = enable_if_t<is_convertible_v<typename iterator_traits<I>::iterator_category, bidirectional_iterator_tag>>>
 	ilist_splay(I first, I last): ilist_splay() { assign(first, last); }
 	
-	ilist_splay(ilist_splay &&a) { *this = std::move(a); }
+	ilist_splay(ilist_splay &&a) { operator=(std::move(a)); }
 	ilist_splay& operator=(ilist_splay &&a) {
 		__end = make_end_node(exchange(a.__end, nullptr), this);
 		__size = a.__size;
@@ -84,7 +84,11 @@ struct ilist_splay {
 	}
 	
 	ilist_splay(const ilist_splay &a) = delete ;
-	ilist_splay& operator=(const ilist_splay &a) = delete ;
+	ilist_splay& operator=(const ilist_splay &a) {
+		size_t n = a.__size; resize(n);
+		for(auto v = __end, i = a.__end; n--; ) move_prev(v), move_prev(i), *v->value = *i->value;
+		return *this;
+	}
 	
 	size_t size() const { return __size; }
 	bool empty() const { return __size == 0; }
@@ -104,9 +108,15 @@ struct ilist_splay {
 	void resize(size_t n) { if(n > __size) resize_more(n, T{}); else if(n < __size) resize_less(n); }
 	void resize(size_t n, const T &value) { if(n > __size) resize_more(n, value); else if(n < __size) resize_less(n); }
 	
-	template<class I, class = std::_RequireInputIter<I>>
-	void assign(I first, I last) { resize(std::distance(first, last)); for(T &x : *this) x = *first++; }
-	void assign(size_t n, const T &value) { resize(n, value); }
+	auto assign(auto first, auto last) -> decltype(*--last, void()) {
+		resize(std::distance(first, last));
+		for(node *v = __end; first != last; ) move_prev(v), *v->value = *--last;
+	}
+	void assign(size_t n, const T &value) {
+		node *v = __end;
+		for(size_t i=__size; i--; ) move_prev(v), *v->value = value;
+		resize(n, value);
+	}
 	
 	void push_back(const T &x) { insert(__end, x); }
 	iterator insert(iterator pos, const T &x) { return insert(pos, new_node(x)); }
@@ -164,14 +174,14 @@ struct ilist_splay {
 	
 	void resize_less(size_t n) { assert(n <= __size);
 		auto [v, t] = split(nth(splay(__end), n));
-		for(iterator it=t; it.t!=__end; ) remove_node((it++).t);
+		while(t!=__end) remove_node(t), move_next(t);
 		set_left(splay(__end), v);
 		upd_sz(__end);
 		__size = n;
 	}
 	
 	void resize_more(size_t n, const T &value) { assert(n >= __size);
-		node *v = leftmost(build(n - __size, [&value](auto &x){ x = value; }));
+		node *v = leftmost(build(n - __size, value));
 		set_left(v, split(__end).first);
 		set_left(__end, v);
 		upd_sz(v, __end);
@@ -198,6 +208,16 @@ struct ilist_splay {
 	static node* nth(node *v, size_t n) {
 		assert(n < sz(v));
 		for(size_t sl; ; v = n<sl ? v->l : (n-=sl+1, v->r)) if(n == (sl=sz(v->l))) return splay(v);
+	}
+	
+	static void move_next(node *&v) {
+		if(v->r) for(v = v->r; v->l; v = v->l);
+		else { while(v->p->r == v) v = v->p; v = v->p; }
+	}
+	
+	static void move_prev(node *&v) {
+		if(v->l) for(v = v->l; v->r; v = v->r);
+		else { while(v->p->l == v) v = v->p; v = v->p; }
 	}
 	
 	static inline void upd_after_rotate(node *x, node *y, node *p) {
@@ -243,13 +263,11 @@ struct ilist_splay {
 		return {l, s};
 	}
 	
-	static node* build(size_t n, auto set_value) {
-		if(n == 0) return nullptr;
-		node *v = new_node(), *l = build((n-1)/2, set_value);
-		v->value = new_value();
-		set_value(*v->value);
-		set_left(v, l);
-		set_right(v, build((n-1)-sz(l), set_value));
+	static node* build(size_t n, const T &value) {
+		if(n-- == 0) return nullptr;
+		node *v = new_node(value);
+		set_left(v, build(n/2, value));
+		set_right(v, build(n-n/2, value));
 		upd_sz(v);
 		return v;
 	}
