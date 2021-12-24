@@ -147,7 +147,7 @@ struct ilist_splay {
 	}
 	
 	void remove(iterator it) { remove_node(erase(it).t); }
-	void remove(iterator first, iterator last) { remove_node(extract(first, last).t); }
+	void remove(iterator first, iterator last) { ilist_splay(extract(first, last)).clear(); }
 	ilist_splay erase(iterator first, iterator last) { return extract(first, last); }
 	
 	private:
