@@ -83,7 +83,7 @@ struct ilist_splay {
 		return *this;
 	}
 	
-	ilist_splay(const ilist_splay &a) { *this = a; }
+	ilist_splay(const ilist_splay &a): ilist_splay() { *this = a; }
 	ilist_splay& operator=(const ilist_splay &a) {
 		size_t n = a.__size; resize(n);
 		for(auto v = __end, i = a.__end; n--; ) move_prev(v), move_prev(i), *v->value = *i->value;
