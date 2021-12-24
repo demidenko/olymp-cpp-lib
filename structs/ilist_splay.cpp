@@ -76,14 +76,14 @@ struct ilist_splay {
 	template<class I, class = enable_if_t<is_convertible_v<typename iterator_traits<I>::iterator_category, bidirectional_iterator_tag>>>
 	ilist_splay(I first, I last): ilist_splay() { assign(first, last); }
 	
-	ilist_splay(ilist_splay &&a) { operator=(std::move(a)); }
-	ilist_splay& operator=(ilist_splay &&a) {
+	ilist_splay(ilist_splay &&a) noexcept { *this = std::move(a); }
+	ilist_splay& operator=(ilist_splay &&a) noexcept {
 		__end = make_end_node(exchange(a.__end, nullptr), this);
 		__size = a.__size;
 		return *this;
 	}
 	
-	ilist_splay(const ilist_splay &a) = delete ;
+	ilist_splay(const ilist_splay &a) { *this = a; }
 	ilist_splay& operator=(const ilist_splay &a) {
 		size_t n = a.__size; resize(n);
 		for(auto v = __end, i = a.__end; n--; ) move_prev(v), move_prev(i), *v->value = *i->value;
