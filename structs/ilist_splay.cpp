@@ -10,15 +10,14 @@ struct ilist_splay {
 	};
 	
 	template<class V>
-	struct node_iterator: public std::iterator<std::random_access_iterator_tag, V, size_t> {
-		private: friend ilist_splay;
-		node *t;
+	struct node_iterator: public std::iterator<std::random_access_iterator_tag, V, ptrdiff_t> {
+		private: friend ilist_splay; node *t;
 		node_iterator(node *ptr): t(ptr) { }
-		public:
-		node_iterator(): node_iterator(nullptr) { }
+		public: node_iterator(): node_iterator(nullptr) { }
 		V& operator*() { return *t->value; }
-		bool operator==(const node_iterator &it) { return t == it.t; }
-		bool operator!=(const node_iterator &it) { return t != it.t; }
+		bool operator==(const node_iterator &it) const { return t == it.t; }
+		bool operator!=(const node_iterator &it) const { return t != it.t; }
+		bool operator<(const node_iterator &it) const { return position(t) < position(it.t); }
 		
 		node_iterator& operator++() {
 			for(;; rotate_big(t)) {
@@ -267,16 +266,9 @@ struct ilist_splay {
 	}
 	
 	static node* make_end_node(node *end, ilist_splay *list) { end->value = (T*)list; return end; }
-	
-	static node* new_node(const T &x) {
-		node *t = new_node();
-		t->value = new_value();
-		*t->value = x;
-		return t;
-	}
-	
-	static node* new_node() { if(node *v = pointers_manager<node>::new_ptr()) return *v = node(), v; }
-	static T* new_value() { return pointers_manager<T>::new_ptr(); }
+	static node* new_node(const T &x) { auto t = new_node(); t->value = new_value(x); return t; }
+	static node* new_node() { auto v = pointers_manager<node>::new_ptr(); *v = node(); return v; }
+	static T* new_value(const T &x) { auto v = pointers_manager<T>::new_ptr(); *v = x; return v; }
 	static void remove_node(node *v) {
 		if(v->value) pointers_manager<T>::free_ptr(v->value);
 		pointers_manager<node>::free_ptr(v);
