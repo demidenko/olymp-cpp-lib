@@ -113,8 +113,7 @@ struct ilist_splay {
 		for(node *v = __end; first != last; ) move_prev(v), *v->value = *--last;
 	}
 	void assign(size_t n, const T &value) {
-		node *v = __end;
-		for(size_t i=__size; i--; ) move_prev(v), *v->value = value;
+		for(auto [v, i] = pair(__end, __size); i--; ) move_prev(v), *v->value = value;
 		resize(n, value);
 	}
 	
@@ -122,7 +121,7 @@ struct ilist_splay {
 	iterator insert(iterator pos, const T &x) { return insert(pos, new_node(x)); }
 	iterator insert(iterator pos, iterator it) { return insert(pos, it.t); }
 	iterator insert(iterator pos, extracted e) { return e.t ? insert(pos, splay(e.t)) : pos; }
-	iterator insert(iterator pos, ilist_splay &&a) { return insert(pos, split(a.__end).first); }
+	iterator insert(iterator pos, ilist_splay &&a) { return insert(pos, a.extract(a.begin(),a.end())); }
 	
 	extracted extract(iterator first, iterator last) {
 		auto [l, suf] = split(first.t);
@@ -132,8 +131,6 @@ struct ilist_splay {
 		__size -= sz(mid);
 		return extracted(mid);
 	}
-	
-	ilist_splay erase(iterator first, iterator last) { return extract(first, last); }
 	
 	iterator erase(iterator it) {
 		assert(it.t != __end);
@@ -150,6 +147,8 @@ struct ilist_splay {
 	}
 	
 	void remove(iterator it) { remove_node(erase(it).t); }
+	void remove(iterator first, iterator last) { remove_node(extract(first, last).t); }
+	ilist_splay erase(iterator first, iterator last) { return extract(first, last); }
 	
 	private:
 	node * __end;
@@ -172,15 +171,15 @@ struct ilist_splay {
 		return iterator(v);
 	}
 	
-	void resize_less(size_t n) { assert(n <= __size);
+	void resize_less(const size_t n) { assert(n <= __size);
 		auto [v, t] = split(nth(splay(__end), n));
-		while(t!=__end) remove_node(t), move_next(t);
+		for(auto [r, i] = pair(__end, __size-n); i--; ) move_prev(r), remove_node(r);
 		set_left(splay(__end), v);
 		upd_sz(__end);
 		__size = n;
 	}
 	
-	void resize_more(size_t n, const T &value) { assert(n >= __size);
+	void resize_more(const size_t n, const T &value) { assert(n >= __size);
 		node *v = leftmost(build(n - __size, value));
 		set_left(v, split(__end).first);
 		set_left(__end, v);
@@ -208,11 +207,6 @@ struct ilist_splay {
 	static node* nth(node *v, size_t n) {
 		assert(n < sz(v));
 		for(size_t sl; ; v = n<sl ? v->l : (n-=sl+1, v->r)) if(n == (sl=sz(v->l))) return splay(v);
-	}
-	
-	static void move_next(node *&v) {
-		if(v->r) for(v = v->r; v->l; v = v->l);
-		else { while(v->p->r == v) v = v->p; v = v->p; }
 	}
 	
 	static void move_prev(node *&v) {
