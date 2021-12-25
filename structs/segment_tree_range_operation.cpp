@@ -1,12 +1,16 @@
 template<class T, class O>
 struct segment_tree {
-	segment_tree(size_t n, function<T(size_t)> gen): d(n), t(d*2, {{}, nullopt}) {
-		if(n) build(0, d, n=1, gen);
-	}
+	explicit segment_tree(size_t n = 0, function<T(size_t)> gen = [](size_t){ return T{}; })
+		: d(n), t(d*2, {{}, nullopt}) { if(n) build(0, d, n=1, gen); }
 	
 	void apply(size_t l, size_t r, const O &operation) {
 		if(r > d) r = d;
 		if(l < r) apply(l, r, operation, 0, d, 1);
+	}
+	
+	void set_value(size_t i, const T &value) {
+		assert(i < d);
+		set_value(i, value, 0, d, 1);
 	}
 	
 	T operator()(size_t l, size_t r) const {
@@ -17,7 +21,7 @@ struct segment_tree {
 	const T& operator()() const { return t[1].first; }
 	
 	private:
-	const size_t d;
+	size_t d;
 	mutable vector<pair<T,optional<O>>> t;
 	
 	void cover(size_t v, const O &operation, size_t length) const {
@@ -37,10 +41,7 @@ struct segment_tree {
 	}
 	
 	void apply(size_t i, size_t j, const O &operation, size_t l, size_t r, size_t v) {
-		if(i == l && j == r) {
-			cover(v, operation, r-l);
-			return ;
-		}
+		if(i == l && j == r) { cover(v, operation, r-l); return ; }
 		push(v, r-l);
 		size_t m = (l+r) >> 1, vr = v + (m-l)*2;
 		if(j <= m) apply(i, j, operation, l, m, v+1); else
@@ -49,6 +50,15 @@ struct segment_tree {
 			apply(i, m, opl, l, m, v+1);
 			apply(m, j, opr, m, r, vr);
 		}
+		t[v].first = T(t[v+1].first, t[vr].first);
+	}
+	
+	void set_value(size_t i, const T &value, size_t l, size_t r, size_t v) {
+		if(l+1 == r) { t[v].first = value; return ; }
+		push(v, r-l);
+		size_t m = (l+r) >> 1, vr = v + (m-l)*2;
+		if(i < m) set_value(i, value, l, m, v+1);
+		else set_value(i, value, m, r, vr);
 		t[v].first = T(t[v+1].first, t[vr].first);
 	}
 	
@@ -61,25 +71,22 @@ struct segment_tree {
 		return T(query(i,m,l,m,v+1), query(m,j,m,r,vr));
 	}
 	
-	size_t build(size_t l, size_t r, size_t &v, auto gen) {
-		size_t cur = v++;
-		if(l+1 == r) t[cur].first = gen(l); else {
-			size_t m = (l+r) >> 1, vl = build(l, m, v, gen), vr = build(m, r, v, gen);
-			t[cur].first = T(t[vl].first, t[vr].first);
-		}
-		return cur;
+	void build(size_t l, size_t r, size_t &vn, auto gen) {
+		size_t v = vn++, m = (l+r) >> 1;
+		if(l+1 == r) { t[v].first = gen(l); return ; }
+		build(l, m, vn, gen); build(m, r, vn, gen);
+		t[v].first = T(t[v+1].first, t[v+(m-l)*2].first);
 	}
 };
 
 /* implement:
 	struct operation {
-		operation()
-		operation(const operation &a, const operation &b)
+		operation(const operation &op, const operation &op2)
 		auto split(size_t sl, size_t sr) const { return pair<const operation&,const operation&>{*this,*this}; }
 	};
 	struct node {
 		node()
-		node(const node &l, const node &r)
-		node(const node &t, const operation &o, size_t length)
-	}
+		node(const node &vl, const node &vr)
+		node(const node &v, const operation &op, size_t length)
+	};
 */
