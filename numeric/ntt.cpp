@@ -6,18 +6,17 @@ namespace NTT {
 		using mint = modint<mod>;
 		static constexpr size_t H = ctz(mod-1), MAXN = size_t(1) << H;
 		
-		static auto make_roots() {
+		static inline const auto roots = [] {
 			array<mint, H+1> r;
 			for(int g=2; g<mod; ++g) {
 				r[H] = g;
 				for(size_t i=H; i--; ) r[i] = r[i+1] * r[i+1];
 				if(r[0] == 1 && r[1] != 1) return r;
 			}
-		}
+		}();
 		
 		static void ntt(vector<mint> &a) {
-			static const auto roots = make_roots();
-			const size_t n = size(a);
+			const size_t n = size(a); assert((n&(n-1)) == 0 && n <= MAXN);
 			for(size_t i=1, j=0, t; i<n; ++i) {
 				for(t = n>>1; j&t; t>>=1) j^=t;
 				if((j^=t) < i) swap(a[i], a[j]);
@@ -75,12 +74,12 @@ namespace NTT {
 			if(size(a) < size(b)) return convolution<mod>(b, a);
 			if(empty(b)) return {};
 			const size_t n = size(a)+size(b)-1, d = size_t(1)<<lg_geq(n);
-			assert(d <= ntt_device<mod>::MAXN);
 			vector<modint<mod>> fa(d), fb(d);
 			copy(begin(a), end(a), begin(fa));
 			copy(begin(b), end(b), begin(fb));
+			bool equal = fa == fb;
 			ntt_device<mod>::ntt(fa);
-			ntt_device<mod>::ntt(fb);
+			if(equal) fb = fa; else ntt_device<mod>::ntt(fb);
 			for(size_t i=0; i<d; ++i) fa[i]*=fb[i];
 			ntt_device<mod>::ntt_inv(fa);
 			fa.resize(n);
