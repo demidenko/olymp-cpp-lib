@@ -12,17 +12,15 @@ namespace kihash {
 	
 	struct hash_t {
 		hash_t(): x(0) {}
-		hash_t(int32_t val): x(val<0 ? val+M : val) { }
-		void operator*=(const hash_t &b){ x = mul(x,b.x); }
-		void operator+=(const hash_t &b){ x+=b.x; if(x>=M) x-=M; }
-		void operator-=(const hash_t &b){ if(b.x>x) x+=M-b.x; else x-=b.x; }
-		friend hash_t operator*(hash_t a, const hash_t &b){ a*=b; return a; }
-		friend hash_t operator+(hash_t a, const hash_t &b){ a+=b; return a; }
-		friend hash_t operator-(hash_t a, const hash_t &b){ a-=b; return a; }
-		friend bool operator==(const hash_t &a, const hash_t &b){ return a.x==b.x; }
-		friend bool operator!=(const hash_t &a, const hash_t &b){ return a.x!=b.x; }
-		friend ostream& operator<<(ostream &o, const hash_t &h){ return o<<h.x; }
-		uint64_t to_uint() { return x; }
+		hash_t(int32_t val): x(val<0 ? val+M : val) {}
+		#define hash_t_op(O, E, F) hash_t& operator E(const hash_t &b) { F return *this; } friend hash_t operator O(hash_t a, const hash_t &b) { return a E b; }
+		hash_t_op(*, *=, x = mul(x,b.x); )
+		hash_t_op(+, +=, x+=b.x; if(x>=M) x-=M; )
+		hash_t_op(-, -=, if(b.x>x) x+=M-b.x; else x-=b.x; )
+		bool operator==(const hash_t &b) const { return x == b.x; }
+		bool operator!=(const hash_t &b) const { return x != b.x; }
+		friend ostream& operator<<(ostream &o, const hash_t &h) { return o<<h.x; }
+		uint64_t operator*() const { return x; }
 		private: uint64_t x;
 	};
 	
@@ -55,18 +53,17 @@ namespace kihash {
 			px *= a.px;
 		}
 		friend hash_view operator+(hash_view a, const hash_view &b) { a+=b; return a; }
-		bool operator==(const hash_view &b) { return h == b.h && length == b.length; }
+		bool operator==(const hash_view &b) const { return h == b.h && length == b.length; }
+		uint64_t operator*() const { return *h; }
 		private: hash_t px;
-		hash_view(const hash_t &h, size_t len, const hash_t &px): h(h), length(len), px(px) {}
+		hash_view(hash_t h, size_t len, hash_t px): h(h), length(len), px(px) {}
 		friend hasher;
 	};
 	
 	struct hasher {
-		hasher(const auto &s) {
-			size_t n = size(s);
-			expand_xpow(n);
-			suf.resize(n+1);
-			for(size_t i=n; i--; ) suf[i] = suf[i+1]*X + s[i];
+		hasher(const auto &s): suf(size(s)+1) {
+			expand_xpow(size(s));
+			for(size_t i=size(s); i--; ) suf[i] = suf[i+1]*X + s[i];
 		}
 		
 		hash_t substr(size_t pos, size_t n) const {
@@ -79,13 +76,10 @@ namespace kihash {
 		}
 		
 		private: vector<hash_t> suf;
-		
 		static inline vector<hash_t> xpow = {1};
 		static void expand_xpow(size_t n) {
-			if(size_t pn = size(xpow); pn < n+1) {
-				xpow.resize(n+1);
-				for(size_t i=pn; i<=n; ++i) xpow[i] = xpow[i-1]*X;
-			}
+			xpow.reserve(n);
+			while(size(xpow) <= n) xpow.push_back(xpow.back() * X);
 		}
 	};
 }
