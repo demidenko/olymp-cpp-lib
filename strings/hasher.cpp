@@ -36,7 +36,7 @@ namespace kihash {
 		return h;
 	}
 	
-	struct hasher;
+	struct hasher; struct hash_span;
 	struct hash_view {
 		hash_t h;
 		size_t length;
@@ -63,26 +63,46 @@ namespace kihash {
 			expand_xpow(size(s));
 			for(size_t i=size(s); i--; ) suf[i] = suf[i+1]*X + s[i];
 		}
-		
 		hash_t substr(size_t pos, size_t n) const {
 			assert(pos + n < size(suf));
 			return suf[pos] - suf[pos+n]*xpow[n];
 		}
-		
-		hash_view substr_view(size_t pos, size_t n) const {
-			return {substr(pos,n), n, xpow[n]};
-		}
-		
+		hash_view subview(size_t pos, size_t n) const { return {substr(pos,n), n, xpow[n]}; }
+		hash_span subspan(size_t pos, size_t n) const;
+		size_t length() const { return size(data); }
 		int32_t operator[](size_t i) const { return data.at(i); }
-		
 		private: 
 		vector<hash_t> suf;
 		vector<int32_t> data;
-		
 		static inline vector<hash_t> xpow = {1};
 		static void expand_xpow(size_t n) {
 			xpow.reserve(n);
 			while(size(xpow) <= n) xpow.push_back(xpow.back() * X);
 		}
 	};
+	
+	struct hash_span {
+		hash_span(const hasher &s, size_t l, size_t n): s(s), start(l), len(n) { assert(start + len <= s.length()); }
+		size_t length() const { return len; }
+		int32_t operator[](size_t i) const { return s[start + i]; }
+		hash_view subview(size_t pos, size_t n) const { return s.subview(start + pos, n); }
+		hash_span subspan(size_t pos, size_t n) const { return {s, start+pos, n}; }
+		friend size_t lcp(const hash_span &a, const hash_span &b) {
+			size_t l = 1, r = min(a.len, b.len) + 1, m;
+			while(l < r) if(m=(l+r)/2; a.subview(0,m)==b.subview(0,m)) l = m+1; else r = m;
+			return l - 1;
+		}
+		friend bool operator==(const hash_span &a, const hash_span &b) {
+			return a.subview(0, a.len) == b.subview(0, b.len);
+		}
+		friend bool operator<(const hash_span &a, const hash_span &b) {
+			size_t i = lcp(a, b);
+			return i < b.len && (i==a.len || a[i] < b[i]);
+		}
+		private:
+		const hasher &s;
+		size_t start, len;
+	};
+	
+	hash_span hasher::subspan(size_t pos, size_t n) const { return {*this, pos, n}; }
 }
