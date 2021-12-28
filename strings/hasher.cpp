@@ -1,16 +1,6 @@
 namespace kihash {
-	constexpr uint64_t M = (uint64_t(1)<<61) - 1;
-	
-	uint64_t mul(uint64_t a, uint64_t b) {
-		uint64_t l1 = (uint32_t)a, h1 = a >> 32, l2 = (uint32_t)b, h2 = b >> 32;
-		uint64_t l = l1 * l2, m = l1 * h2 + l2 * h1, h = h1 * h2;
-		uint64_t ret = (l & M) + (l >> 61) + (h << 3) + (m >> 29) + (m << 35 >> 3) + 1;
-		ret = (ret & M) + (ret >> 61);
-		ret = (ret & M) + (ret >> 61);
-		return ret - 1;
-	}
-	
 	struct hash_t {
+		static constexpr uint64_t M = (uint64_t(1)<<61) - 1;
 		hash_t(): x(0) {}
 		hash_t(int32_t val): x(val<0 ? val+M : val) {}
 		#define hash_t_op(O, E, F) hash_t& operator E(const hash_t &b) { F return *this; } friend hash_t operator O(hash_t a, const hash_t &b) { return a E b; }
@@ -19,9 +9,16 @@ namespace kihash {
 		hash_t_op(-, -=, if(b.x>x) x+=M-b.x; else x-=b.x; )
 		bool operator==(const hash_t &b) const { return x == b.x; }
 		bool operator!=(const hash_t &b) const { return x != b.x; }
-		friend ostream& operator<<(ostream &o, const hash_t &h) { return o<<h.x; }
 		uint64_t operator*() const { return x; }
 		private: uint64_t x;
+		uint64_t mul(uint64_t a, uint64_t b) {
+			uint64_t l1 = (uint32_t)a, h1 = a >> 32, l2 = (uint32_t)b, h2 = b >> 32;
+			uint64_t l = l1 * l2, m = l1 * h2 + l2 * h1, h = h1 * h2;
+			uint64_t ret = (l & M) + (l >> 61) + (h << 3) + (m >> 29) + (m << 35 >> 3) + 1;
+			ret = (ret & M) + (ret >> 61);
+			ret = (ret & M) + (ret >> 61);
+			return ret - 1;
+		}
 	};
 	
 	const hash_t X = 309935741 +  
@@ -61,7 +58,8 @@ namespace kihash {
 	};
 	
 	struct hasher {
-		hasher(const auto &s): suf(size(s)+1) {
+		hasher(): hasher(""s) {}
+		hasher(const auto &s): suf(size(s)+1), data(begin(s), end(s)) {
 			expand_xpow(size(s));
 			for(size_t i=size(s); i--; ) suf[i] = suf[i+1]*X + s[i];
 		}
@@ -75,7 +73,12 @@ namespace kihash {
 			return {substr(pos,n), n, xpow[n]};
 		}
 		
-		private: vector<hash_t> suf;
+		int32_t operator[](size_t i) const { return data.at(i); }
+		
+		private: 
+		vector<hash_t> suf;
+		vector<int32_t> data;
+		
 		static inline vector<hash_t> xpow = {1};
 		static void expand_xpow(size_t n) {
 			xpow.reserve(n);
