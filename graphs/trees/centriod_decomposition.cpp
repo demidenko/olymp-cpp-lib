@@ -1,7 +1,7 @@
 template<class...T>
 void centriod_decomposition(
 	const graph_t<T...> &g,
-	auto action //use as [&](const auto &t, size_t centroid, size_t sizeof_subtree)
+	auto action //use as [&](auto &g, size_t centroid, size_t sizeof_subtree)
 ) {
 	const size_t n = size(g); if(n == 0) return ;
 	vector<bool> used(n);
@@ -40,7 +40,7 @@ void centriod_decomposition(
 			go(i);
 			std::apply(add_edge, tuple_cat(tuple{c}, tuple<size_t,T...>{e}));
 		}
-		action(tree, c, sz);
+		action(std::as_const(tree), c, sz);
 	};
 	
 	bfs(0, -1);

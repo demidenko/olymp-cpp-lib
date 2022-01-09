@@ -1,3 +1,16 @@
+# Centroid Decomposition
+```c++
+centriod_decomposition(tree, [&](auto &g, size_t centroid, size_t sizeof_subtree) {
+  //do work on subtree here
+});
+```
+Calls lambda for each subtree created during decomposition. Graph `g` have same type as `tree`.
+
+You can freely go to all vertices connected with `centroid` (by dfs/bfs), there are `sizeof_subtree` such vertices.
+
+If work in lambda takes not more than O(sizeof_subtree) then total time is O(nlogn).
+
+
 # Heavy-light Decomposition
 
 ```c++
