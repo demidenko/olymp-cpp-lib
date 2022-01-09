@@ -51,3 +51,70 @@ But as bonus both `query_path` and `query_path_strict` returns LCA too.
 `heavy_light_decomposition<false>` builds Longest-path decomposition (i.e. heavy edge going to subtree with maximum heigth). 
 Convinient for linear time DP on tree. 
 Methods `query_path`/`lca` works correct but in O(sqrt(n)) on [worst case](https://codeforces.com/blog/entry/75410).
+
+
+# Tree DP Root Each
+Calculates DP for each vertex as root of given forest (not only connected tree).
+
+Works in O(Tnlogn) where T is time of `link`.
+
+```c++
+vector<T> res = tree_dp_root_each<T>(g,
+  [](size_t v) { ... }, //single vertex
+  [](T dv, T di, auto &edge) { ... } //link function
+);
+```
+
+`link` means subtree rooted at `i` linked to subtree rooted at `v` (by edge `[v, i]`).
+
+`edge` exists in `g` and can be used as `auto [v, i, ...] = edge`.
+
+`dv` is DP in subtree rooted at `v` (same for `di`).
+
+<details>
+<summary>Code examples for problems</summary>
+
+Diameter of forest
+```c++
+auto res = tree_dp_root_each<int>(g,
+  [](size_t v) { return 1; },
+  [](int dv, int di, ...) { return max(dv, di+1); }
+);
+int diam = *max_element(begin(res), end(res));
+```
+
+[codeforces 1324F](https://codeforces.com/contest/1324/problem/F): Best subtree by balance
+```c++
+auto res = tree_dp_root_each<int>(g,
+  [&](size_t v){ return a[v] ? 1 : -1; },
+  [](int dv, int di, ...) { return dv + max(di, 0); }
+);
+```
+
+[atcoder](https://atcoder.jp/contests/dp/tasks/dp_v): Count of black connected subtrees
+```c++
+auto res = tree_dp_root_each<mint>(g,
+  [](size_t v) { return 1; },
+  [](mint dv, mint di, ...) { return dv * (di+1); }
+);
+```
+
+[codeforces 960E](https://codeforces.com/contest/960/problem/E): +- sum of all paths
+```c++
+struct S {
+  mint sum, cnt; //sum/count of paths started from root
+};
+
+auto res = tree_dp_root_each<S>(g,
+  [&](size_t v) { return S{a[v], 1}; },
+  [&](S dv, S di, auto &edge) {
+    auto [v, i] = edge;
+    return S{
+      dv.sum + a[v] * di.cnt - di.sum,
+      dv.cnt + di.cnt
+    };
+  }
+);
+```
+</details>
+    
