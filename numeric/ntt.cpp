@@ -47,28 +47,27 @@ namespace NTT {
 			if(p < 2 || p%2 == 0 || ctz(p-1) < min_adequate_h) return false;
 			for(int i=3; i*i*i*i<=p; i+=2) if(p%i == 0) return false;
 			int64_t r = 1, t = 2;
-			for(int n = p-1; n>0; n>>=1, t = t*t %p) if(n&1) r = r*t %p;
+			for(int n=p-1; n>0; n>>=1, t = t*t %p) if(n&1) r = r*t %p;
 			return r == 1;
 		}
 		
-		template<size_t count, size_t min_h, int min_mod, size_t ...I>
+		template<class T, size_t min_h> struct is_ntt_modint: false_type {};
+		template<decltype(auto) mod, size_t min_h> struct is_ntt_modint<modint<mod>,min_h>: bool_constant<is_same_v<decltype(mod),int> && ctz(mod-1)>=min_h && is_ntt_prime(mod)> {};
+		
+		template<size_t min_h, int min_mod, size_t ...I>
 		constexpr auto __gen_ntt_mods(index_sequence<I...>) {
 			constexpr auto mods = [] {
-				array<int, count> ar{};
-				for(size_t i=0, h=min_h; h<=30; ++h)
-				for(int c = 1; i < count && c <= (numeric_limits<int>::max()>>(h+1)); c+=2)
+				array<int, sizeof...(I)> ar{};
+				for(size_t i = 0, h = min_h; h <= 30; ++h)
+				for(int c = 1; i < size(ar) && c <= (numeric_limits<int>::max()>>(h+1)); c+=2)
 				if(int mod = (c<<h)+1; mod >= min_mod && is_ntt_prime(mod)) ar[i++] = mod;
 				return ar;
 			}();
-			static_assert(mods[count-1] != 0, "Can't find enough required ntt mods");
+			static_assert(mods.back() != 0, "Can't find enough required ntt mods");
 			return integer_sequence<int, mods[I]...>{};
 		}
 		
-		template<size_t count, size_t min_h, int min_mod>
-		using make_ntt_mods = decltype(__gen_ntt_mods<count, min_h, min_mod>(make_index_sequence<count>{}));
-		
-		template<class T, size_t min_h> struct is_ntt_modint: false_type {};
-		template<decltype(auto) mod, size_t min_h> struct is_ntt_modint<modint<mod>,min_h>: bool_constant<is_same_v<decltype(mod),int> && is_ntt_prime(mod) && ctz(mod-1)>=min_h> {};
+		template<size_t count, size_t min_h, int min_mod> using make_ntt_mods = decltype(__gen_ntt_mods<min_h, min_mod>(make_index_sequence<count>{}));
 		
 		template<int mod> vector<modint<mod>> convolution(const vector<auto> &a, const vector<auto> &b) {
 			if(size(a) < size(b)) return convolution<mod>(b, a);
