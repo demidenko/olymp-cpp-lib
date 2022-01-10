@@ -3,10 +3,9 @@ struct sat2 { //sat2 a(n); a[i] || !a[j];
 	
 	struct item {
 		sat2 &s; size_t i; bool value;
-		void operator||(const item &other) {
-			s.add_or(i, value, other.i, other.value);
-		}
+		void operator||(const item &o) { s.add_or(i, value, o.i, o.value); }
 		item operator!() { return {s, i, !value}; }
+		void operator=(bool val) { s.add_or(i, val, i, val); }
 	};
 	item operator[](size_t i) { return {*this, i, true}; }
 	
