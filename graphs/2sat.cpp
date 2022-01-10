@@ -1,5 +1,5 @@
 struct sat2 { //sat2 a(n); a[i] || !a[j];
-	sat2(size_t n): n(n), g(n*2) {}
+	explicit sat2(size_t n = 0): n(n), g(n*2) {}
 	
 	struct item {
 		sat2 &s; size_t i; bool value;
@@ -16,8 +16,8 @@ struct sat2 { //sat2 a(n); a[i] || !a[j];
 	}
 	
 	optional<vector<bool>> solve() {
-		vector<bool> res(n);
 		auto cp = strong_connected_components(g).second;
+		vector<bool> res(n);
 		for(size_t i=0; i<n; ++i) {
 			size_t x = cp[i], y = cp[i+n];
 			if(x == y) return nullopt;
@@ -26,7 +26,5 @@ struct sat2 { //sat2 a(n); a[i] || !a[j];
 		return res;
 	}
 	
-	private:
-	const size_t n;
-	graph g;
+	private: size_t n; graph g;
 };
