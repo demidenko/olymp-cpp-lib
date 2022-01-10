@@ -149,6 +149,16 @@ struct ilist_splay {
 	void remove(iterator first, iterator last) { ilist_splay(extract(first, last)).clear(); }
 	ilist_splay erase(iterator first, iterator last) { return extract(first, last); }
 	
+	iterator partition_point(auto pred) {
+		auto last_false = __end;
+		for(node* v = splay(__end)->l, *nxt; v; v = nxt) {
+			if(pred(std::as_const(*v->value))) nxt = v->r;
+			else last_false = v, nxt = v->l;
+			if(nxt == nullptr) splay(v);
+		}
+		return last_false;
+	}
+	
 	private:
 	node * __end;
 	size_t __size;
