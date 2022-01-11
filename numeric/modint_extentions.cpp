@@ -1,12 +1,10 @@
-template<class mint> optional<mint> sqrt(const mint &a) { //correct for prime mod
-	const int mod = mint::get_mod();
+template<class mint> optional<mint> sqrt(mint a) { //correct for prime mod
 	if(*a < 2) return a;
-	if(pow(a, (mod-1)>>1) == -1) return nullopt;
-	int s = -1, t = mod - 1;
-	while(t%2 == 0) ++s, t>>=1;
-	mint a_inv = 1 / a, r = pow(a, (t+1)>>1), c;
+	int m = mint::get_mod();
+	if(m%2 == 0 || pow(a, m>>1) == -1) return nullopt;
 	static mt19937 rnd(chrono::high_resolution_clock::now().time_since_epoch().count());
-	do c = rnd(); while(pow(c, (mod-1)>>1) != -1);
-	for(c = pow(c, t); s--; c*=c) if(mint d = pow(r*r*a_inv, 1<<s); d == -1) r*=c;
-	return r;
+	mint t; do t = rnd(); while(*pow(t*t-4*a, m>>1) < 2);
+	mint d = 1, c = -t, b = -t;
+	for(++m; m>>=1; b=a*2-b*b, a*=a) m%2 ? d=c-d*b, c*=a : c=d*a-c*b;
+	return d;
 }
