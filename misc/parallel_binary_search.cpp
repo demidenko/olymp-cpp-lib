@@ -23,7 +23,6 @@ auto parallel_binary_search(size_t queries_count, size_t versions_count, auto ac
 			ranges.erase(it, end(ranges));
 		}
 		void commit() {
-			ensure(ask.has_value(), "ask is not set");
 			current_version++;
 			calc();
 		}
@@ -31,6 +30,7 @@ auto parallel_binary_search(size_t queries_count, size_t versions_count, auto ac
 		optional<ask_type> ask;
 		typename decltype(ranges)::iterator iter, rter;
 		void calc() {
+			ensure(ask.has_value(), "ask is not set");
 			ensure(current_version <= n, "too many versions");
 			if(iter == end(ranges)) return ;
 			const size_t m = (iter->l + iter->r) >> 1;
