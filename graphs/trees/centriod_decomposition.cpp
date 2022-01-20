@@ -1,4 +1,4 @@
-template<class...T>
+template<class... T>
 void centriod_decomposition(
 	const graph_t<T...> &g,
 	auto action //use as [&](auto &g, size_t centroid, size_t sizeof_subtree)
@@ -8,7 +8,7 @@ void centriod_decomposition(
 	vector<size_t> par(n), sub(n), q(n);
 	
 	auto bfs = [&](size_t start, size_t p) {
-		if(start == -1 || used[start]) return ;
+		if(start == n || used[start]) return ;
 		par[start] = p;
 		size_t qn = 0;
 		q[qn++] = start;
@@ -20,18 +20,15 @@ void centriod_decomposition(
 				par[i] = v;
 			}
 		}
-		for(size_t k = qn-1; k; --k) {
-			size_t v = q[k];
-			sub[par[v]] += sub[v];
-		}
+		while(--qn) sub[par[q[qn]]] += sub[q[qn]];
 	};
 	
 	graph_t<T...> tree(n);
 	auto add_edge = [&tree](auto&&... args) { tree.add_edge(args...); };
 	function<void(size_t)> go = [&](size_t c) {
 		const size_t sz = sub[c];
-		for(size_t nx=c; nx!=-1;) {
-			c = exchange(nx, -1);
+		for(size_t nx=c; nx != n; ) {
+			c = exchange(nx, n);
 			for(size_t i : g[c]) if(!used[i] && i!=par[c] && sub[i]*2 > sz) nx = i;
 		}
 		used[c] = true;
@@ -43,6 +40,6 @@ void centriod_decomposition(
 		action(std::as_const(tree), c, sz);
 	};
 	
-	bfs(0, -1);
+	bfs(0, n);
 	go(0);
 }
