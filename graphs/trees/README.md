@@ -78,21 +78,20 @@ Methods `query_path`/`lca` works correct but in O(sqrt(n)) on [worst case](https
 
 # Tree DP Root Each
 Calculates DP for each vertex as root of given forest (not only connected tree).
-
-Works in O(Tnlogn) where T is time of `link`.
-
 ```c++
 vector<T> res = tree_dp_root_each<T>(g,
 	[](size_t v) { ... }, //single vertex
 	[](T dv, T di, auto &edge) { ... } //link function
 );
 ```
-
 `link` means subtree rooted at `i` linked to subtree rooted at `v` (by edge `[v, i]`).
 
 `edge` exists in `g` and can be used as `auto [v, i, ...] = edge`.
 
-`dv` is DP in subtree rooted at `v` (same for `di`).
+`dv` is DP of some subtree with root `v` (same for `di` and `i`).
+
+`link` will be called O(nlogn) times in worst case (more precisely O(log(deg(v))) for each edge [v, i]).
+`single` will be called exaclty 2 times for each vertex.
 
 <details>
 <summary>Code examples for problems</summary>
