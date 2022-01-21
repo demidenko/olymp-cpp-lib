@@ -6,10 +6,33 @@ centriod_decomposition(tree, [&](auto &g, size_t centroid, size_t sizeof_subtree
 ```
 Calls lambda for each subtree created during decomposition. Graph `g` have same type as `tree`.
 
-You can freely go to all vertices connected with `centroid` (by dfs/bfs), there are `sizeof_subtree` such vertices.
+It is allowed to go to all vertices connected with `centroid` (by dfs/bfs), there will be `sizeof_subtree` such vertices.
 
-If work in lambda takes not more than O(sizeof_subtree) then total time is O(nlogn).
+If time complexity of lambda is not more than O(sizeof_subtree) then total time is O(nlogn). (O(slogs) -> O(nlog²n), O(s²) -> O(n²)).
 
+### Offline version / Centroid tree
+
+<details>
+<summary>To construct offline data structure use following snippet</summary>
+
+```c++
+auto centriod_decomposition_offline(const auto &g) {
+	vector<size_t> cpar(size(g), -1), w;
+	centriod_decomposition(g, [&](auto &g, size_t centroid, size_t sizeof_subtree) {
+		w.push_back(centroid);
+		for(size_t i : g[centroid]) {
+			while(cpar[i] != -1) i = cpar[i];
+			cpar[i] = centroid;
+		}
+	});
+	vector<uint16_t> level(size(g));
+	if(size_t i=size(g)) for(--i; i--; ) level[w[i]] = level[cpar[w[i]]] + 1;
+	return pair{level, cpar};
+}
+```
+</details>
+
+It returns pair of vectors `level` and `centroid_parent`. Levels numbered from 0 and `level[v] = level[cpar[v]]+1`.
 
 # Heavy-light Decomposition
 
