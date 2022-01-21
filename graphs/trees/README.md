@@ -15,6 +15,7 @@ If time complexity of lambda is not more than O(sizeof_subtree) then total time 
 <details>
 <summary>To construct offline data structure use following snippet</summary>
 
+It returns pair of vectors `level` and `centroid_parent`. Levels numbered from 0 and `level[v] = level[cpar[v]]+1`.
 ```c++
 auto centriod_decomposition_offline(const auto &g) {
 	vector<size_t> cpar(size(g), -1), w;
@@ -32,10 +33,7 @@ auto centriod_decomposition_offline(const auto &g) {
 ```
 </details>
 
-It returns pair of vectors `level` and `centroid_parent`. Levels numbered from 0 and `level[v] = level[cpar[v]]+1`.
-
 # Heavy-light Decomposition
-
 ```c++
 heavy_light_decomposition hld(g); //root = 0 by default, otherwise hld(g, root)
 ```
