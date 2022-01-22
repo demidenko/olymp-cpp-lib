@@ -27,7 +27,7 @@ struct rmq_assign {
 	}
 	
 	private:
-	const size_t d;
+	size_t d;
 	vector<pair<T,bool>> t;
 	
 	static size_t _p2(size_t n) { return n > 1 ? (2<<__lg(n-1)) : 1; }

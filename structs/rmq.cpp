@@ -19,6 +19,6 @@ struct rmq {
 	}
 	const T& operator()() const { return t[1]; }
 	private:
-	const size_t d;
+	size_t d;
 	vector<T> t;
 };
