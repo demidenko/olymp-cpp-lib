@@ -33,22 +33,20 @@ struct segment_tree {
 	void push(size_t v, size_t length) const {
 		if(auto &op = t[v].second) {
 			size_t sl = length >> 1;
-			auto&& [opl, opr] = op->split(sl, length - sl);
-			cover(v+1, opl, sl);
-			cover(v+sl*2, opr, length - sl);
+			cover(v+1, op->slice(0, sl), sl);
+			cover(v+sl*2, op->slice(sl, length), length - sl);
 			op.reset();
 		}
 	}
 	
-	void apply(size_t i, size_t j, const O &operation, size_t l, size_t r, size_t v) {
-		if(i == l && j == r) { cover(v, operation, r-l); return ; }
+	void apply(size_t i, size_t j, const O &op, size_t l, size_t r, size_t v) {
+		if(i == l && j == r) { cover(v, op, r-l); return ; }
 		push(v, r-l);
 		size_t m = (l+r) >> 1, vr = v + (m-l)*2;
-		if(j <= m) apply(i, j, operation, l, m, v+1); else
-		if(i >= m) apply(i, j, operation, m, r, vr); else {
-			auto&& [opl, opr] = operation.split(m-i, j-m);
-			apply(i, m, opl, l, m, v+1);
-			apply(m, j, opr, m, r, vr);
+		if(j <= m) apply(i, j, op, l, m, v+1); else
+		if(i >= m) apply(i, j, op, m, r, vr); else {
+			apply(i, m, op.slice(0, m-i), l, m, v+1);
+			apply(m, j, op.slice(m-i, j-i), m, r, vr);
 		}
 		t[v].first = T(t[v+1].first, t[vr].first);
 	}
@@ -81,8 +79,8 @@ struct segment_tree {
 
 /* implement:
 	struct operation {
-		operation(const operation &op, const operation &op2)
-		auto split(size_t sl, size_t sr) const { return pair<const operation&,const operation&>{*this,*this}; }
+		operation(const operation &op1, const operation &op2)
+		decltype(auto) slice(size_t start, size_t end) const { return *this; }
 	};
 	struct node {
 		node()
