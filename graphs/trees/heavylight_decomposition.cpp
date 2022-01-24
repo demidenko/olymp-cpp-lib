@@ -1,10 +1,11 @@
 template<bool heavy_by_size = true>
 struct heavy_light_decomposition {
 	heavy_light_decomposition(const auto &g, size_t root = 0):
-		par(size(g),-1), header(size(g),-1), tin(size(g)), tn(0)
+		par(size(g),-1), header(size(g),-1), tin(size(g))
 	{
 		calc(g, root);
-		build(g, root, root);
+		size_t tn = 0;
+		build(g, root, root, tn);
 		assert(tn == size(g));
 	}
 	
@@ -30,9 +31,7 @@ struct heavy_light_decomposition {
 		return z;
 	}
 	
-	private:
-	vector<size_t> par, header, tin;
-	size_t tn;
+	private: vector<size_t> par, header, tin;
 	
 	size_t calc(const auto &g, size_t v) {
 		size_t mx = 0, sz = 1;
@@ -46,11 +45,11 @@ struct heavy_light_decomposition {
 		else return mx + 1;
 	}
 	
-	void build(const auto &g, size_t v, size_t f) {
+	void build(const auto &g, size_t v, size_t f, size_t &tn) {
 		tin[v] = tn++;
 		size_t mx = exchange(header[v], f);
 		if(mx == -1) return ;
-		build(g, mx, f);
-		for(size_t i : g[v]) if(i!=par[v] && i!=mx) build(g, i, i);
+		build(g, mx, f, tn);
+		for(size_t i : g[v]) if(i!=par[v] && i!=mx) build(g, i, i, tn);
 	}
 };
