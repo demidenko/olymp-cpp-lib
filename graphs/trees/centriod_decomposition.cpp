@@ -13,11 +13,8 @@ void centriod_decomposition(const graph_t<T...> &g, auto action) {
 	function<void(size_t)> go = [&](size_t c) {
 		const size_t sz = sub[c];
 		for(size_t pr = -1; exchange(pr,c) != c; )
-			for(size_t i : g[c]) if(!used[i] && sub[i]*2 > sz) {
-				sub[c] -= exchange(sub[i], sz);
-				c = i;
-				break;
-			}
+			for(size_t i : g[c]) if(!used[i] && sub[i]*2 > sz)
+				sub[c] -= sub[i], sub[i] = sz, c = i;
 		used[c] = true;
 		for(auto &e : g[c]) if(size_t i=e; !used[i]) {
 			go(i);
