@@ -1,11 +1,9 @@
 template<class T, bool well_formed = false>
 struct segment_tree {
-	segment_tree(size_t n, function<T(size_t)> gen) {
-		if constexpr (!well_formed) d = n;
-		else for(d=1; d<n; d<<=1);
-		t.assign(d*2, {});
-		for(size_t i=0;i<n;++i) t[i+d] = gen(i);
-		for(size_t i=d;i-->1;) t[i] = T(t[i*2], t[i*2+1]);
+	explicit segment_tree(size_t n = 0): d(tree_size(n)), t(d*2) {}
+	segment_tree(size_t n, auto gen): segment_tree(n) {
+		for(size_t i=0; i<n; ++i) t[i+d] = gen(i);
+		for(size_t i=d; i-->1;) t[i] = T(t[i*2], t[i*2+1]);
 	}
 	
 	void set_value(size_t i, const T &value) {
@@ -28,12 +26,13 @@ struct segment_tree {
 	}
 	
 	private:
-	vector<T> t;
 	size_t d;
+	vector<T> t;
+	static size_t tree_size(size_t n) { return well_formed ? (n>1 ? tree_size((n+1)/2)*2 : 1) : n; }
 };
 /* implement:
 	struct node {
 		node()
-		node(const node &l, const node &r)
+		node(const node &vl, const node &vr)
 	};
 */
