@@ -1,7 +1,7 @@
 struct crt_device {
 	template<class T, int mod0, int ...mod> 
 	static T evaluate(const modint<mod0> &a0, const modint<mod>& ...a) {
-		return evaluate<T>(((a - *a0) * get_inv<mod0, mod>())...) * T(mod0) + T(*a0);
+		return evaluate<T>(((a - *a0) * inv<mod0, mod>)...) * T(mod0) + T(*a0);
 	}
 	
 	template<class T, int mod>
@@ -14,8 +14,5 @@ struct crt_device {
 		return res;
 	}
 	
-	private: template<int x, int mod> static inline auto get_inv() {
-		static const auto inv = 1 / modint<mod>{x};
-		return inv;
-	}
+	private: template<int x, int mod> static inline const auto inv =  1 / modint<mod>{x};
 };
