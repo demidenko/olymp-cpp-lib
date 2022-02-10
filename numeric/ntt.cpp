@@ -7,12 +7,13 @@ namespace NTT {
 		static constexpr size_t H = ctz(mod-1), MAXN = size_t(1) << H;
 		
 		static inline const auto roots = [] {
-			array<mint, H+1> r;
+			array<mint, H+1> r{};
 			for(int g=2; g<mod; ++g) {
 				r[H] = g;
 				for(size_t i=H; i--; ) r[i] = r[i+1] * r[i+1];
-				if(r[0] == 1 && r[1] != 1) return r;
+				if(r[0] == 1 && r[1] != 1) break;
 			}
+			return r;
 		}();
 		
 		static void ntt(vector<mint> &a) {
