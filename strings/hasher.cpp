@@ -3,11 +3,11 @@ namespace kihash {
 	struct hash_t {
 		static constexpr uint64_t M = (uint64_t(1)<<61) - 1;
 		hash_t(): x(0) {}
-		hash_t(uint64_t val): x(val >= M ? val%M : val) {}
+		hash_t(uint64_t val): x(val < M ? val : val%M) {}
 		#define hash_t_op(O, E, F) hash_t& operator E(const hash_t &b) { F return *this; } friend hash_t operator O(hash_t a, const hash_t &b) { return a E b; }
 		hash_t_op(*, *=, x = mul(x,b.x); )
 		hash_t_op(+, +=, x+=b.x; if(x>=M) x-=M; )
-		hash_t_op(-, -=, if(b.x>x) x+=M-b.x; else x-=b.x; )
+		hash_t_op(-, -=, if(x<b.x) x+=M-b.x; else x-=b.x; )
 		bool operator==(const hash_t &b) const { return x == b.x; }
 		bool operator!=(const hash_t &b) const { return x != b.x; }
 		uint64_t operator*() const { return x; }
@@ -22,7 +22,7 @@ namespace kihash {
 		}
 	};
 	
-	const hash_t X = 309935741 + (mt19937(chrono::high_resolution_clock::now().time_since_epoch().count())() >> 2) | 1;
+	const hash_t X = uint64_t(309935741)<<32 | mt19937(chrono::high_resolution_clock::now().time_since_epoch().count())() | 1;
 	
 	hash_t pow_of_X(size_t n) {
 		hash_t p = 1, a = X;
