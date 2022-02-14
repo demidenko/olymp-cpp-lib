@@ -13,12 +13,12 @@ struct rsq {
 		else for(t[i+=d]=val; i>1; i>>=1) t[i>>1] = t[i] + t[i^1];
 	}
 	T operator()(size_t l, size_t r) const {
-		T res{};
+		T s{};
 		for(l+=d, r+=d; l<r; l>>=1, r>>=1) {
-			if(l&1) res+=t[l], ++l;
-			if(r&1) --r, res+=t[r];
+			if(l&1) s+=t[l], ++l;
+			if(r&1) --r, s+=t[r];
 		}
-		return res;
+		return s;
 	}
 	const T& operator()() const { return t[1]; }
 	const T& operator[](size_t i) const { return t[i+d]; }

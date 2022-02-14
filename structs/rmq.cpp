@@ -1,6 +1,6 @@
 template<class T, const T& f(const T&, const T&) = std::min<T> >
 struct rmq {
-	explicit rmq(size_t sz = 0, const T &val = {}): d(sz), t(d*2,val) {}
+	explicit rmq(size_t n = 0, const T &val = {}): d(n), t(val,d*2) {}
 	rmq(const vector<T> &vals): d(size(vals)), t(d*2) {
 		copy(begin(vals), end(vals), begin(t)+d);
 		for(size_t i=d; i-->1;) t[i] = f(t[i*2], t[i*2+1]);
@@ -20,5 +20,5 @@ struct rmq {
 	const T& operator()() const { return t[1]; }
 	private:
 	size_t d;
-	vector<T> t;
+	valarray<T> t;
 };

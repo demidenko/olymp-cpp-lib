@@ -1,7 +1,7 @@
 template<class T>
 struct rsq {
-	explicit rsq(size_t sz = 0): f(sz) {}
-	rsq(const vector<auto> &vals): f(begin(vals),end(vals)) {
+	explicit rsq(size_t n = 0): f(n) {}
+	rsq(const vector<auto> &vals): f(data(vals), size(vals)) {
 		for(size_t i = size(vals); i--;) if(size_t j = i&(i+1)) f[j-1]+=f[i];
 	}
 	void add(size_t i, const T &val) {
@@ -16,5 +16,5 @@ struct rsq {
 		for(; i<size(f); i|=i+1) s+=f[i];
 		return s;
 	}
-	private: vector<T> f;
+	private: valarray<T> f;
 };
