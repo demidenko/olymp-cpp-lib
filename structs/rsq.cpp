@@ -1,7 +1,8 @@
 template<class T>
 struct rsq {
 	explicit rsq(size_t n = 0): f(n) {}
-	rsq(const vector<auto> &vals): f(data(vals), size(vals)) {
+	rsq(const vector<auto> &vals): f(size(vals)) {
+        copy(begin(vals), end(vals), begin(f));
 		for(size_t i = size(vals); i--;) if(size_t j = i&(i+1)) f[j-1]+=f[i];
 	}
 	void add(size_t i, const T &val) {
@@ -12,8 +13,7 @@ struct rsq {
 	}
 	T operator[](size_t i) const { return sum_suf(i) - sum_suf(i+1); }
 	T sum_suf(size_t i) const {
-		T s{};
-		for(; i<size(f); i|=i+1) s+=f[i];
+		T s{}; for(; i<size(f); i|=i+1) s+=f[i];
 		return s;
 	}
 	private: valarray<T> f;
