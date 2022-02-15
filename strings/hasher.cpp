@@ -84,13 +84,16 @@ namespace kihash {
 	struct hash_span {
 		hash_span(): p(nullptr) {}
 		hash_span(const hasher &s, size_t i, size_t n): p(&s), offset(i), len(n) { assert(i + n <= s.length()); }
-		size_t length() const { return len; } size_t start() const { return offset; }
+		size_t start() const { return offset; }
+		size_t length() const { return len; }
 		char_t operator[](size_t i) const { return (*p)[offset + i]; }
+		hash_t substr(size_t pos, size_t n) const { return p->substr(offset + pos, n); }
 		hash_view subview(size_t pos, size_t n) const { return p->subview(offset + pos, n); }
 		hash_span subspan(size_t pos, size_t n) const { return {*p, offset + pos, n}; }
+		friend auto operator+(const hash_span &a, const hash_span &b) { return a.subview(0, a.len) + b.subview(0, b.len); }
 		friend size_t lcp(const hash_span &a, const hash_span &b) {
 			size_t l = 1, r = min(a.len, b.len) + 1;
-			while(l < r) if(size_t m=(l+r)/2; a.subview(0,m)==b.subview(0,m)) l = m+1; else r = m;
+			while(l < r) if(size_t m=(l+r)/2; a.substr(0,m)==b.substr(0,m)) l = m+1; else r = m;
 			return l - 1;
 		}
 		friend bool operator<(const hash_span &a, const hash_span &b) {
@@ -98,7 +101,6 @@ namespace kihash {
 			return i < b.len && (i==a.len || a[i] < b[i]);
 		}
 		friend bool operator==(const hash_span &a, const hash_span &b) { return a.subview(0, a.len) == b.subview(0, b.len); }
-		friend auto operator+(const hash_span &a, const hash_span &b) { return a.subview(0, a.len) + b.subview(0, b.len); }
 		private:
 		const hasher *p;
 		size_t offset, len;
