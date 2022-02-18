@@ -37,23 +37,23 @@ namespace kihash {
 	}
 	
 	struct hasher; struct hash_span;
-	struct hash_view {
+	struct hashed {
 		hash_t h;
 		size_t length;
-		hash_view(): h(0), length(0), px(1) {}
-		hash_view(const hash_t &h, size_t len): hash_view(h, len, pow_of_X(len)) {}
-		hash_view(const string &s): hash_view(hash(s), size(s)) {}
-		hash_view(char_t ch): hash_view(ch, 1) {}
-		void operator+=(const hash_view &a) {
+		hashed(): h(0), length(0), px(1) {}
+		hashed(const hash_t &h, size_t len): hashed(h, len, pow_of_X(len)) {}
+		hashed(const string &s): hashed(hash(s), size(s)) {}
+		hashed(char_t ch): hashed(ch, 1) {}
+		void operator+=(const hashed &a) {
 			h += a.h * px;
 			length += a.length;
 			px *= a.px;
 		}
-		friend hash_view operator+(hash_view a, const hash_view &b) { a+=b; return a; }
-		bool operator==(const hash_view &b) const { return h == b.h && length == b.length; }
+		friend hashed operator+(hashed a, const hashed &b) { a+=b; return a; }
+		bool operator==(const hashed &b) const { return h == b.h && length == b.length; }
 		uint64_t operator*() const { return *h; }
 		private: hash_t px;
-		hash_view(hash_t h, size_t len, hash_t px): h(h), length(len), px(px) {}
+		hashed(hash_t h, size_t len, hash_t px): h(h), length(len), px(px) {}
 		friend hasher;
 	};
 	
@@ -63,11 +63,11 @@ namespace kihash {
 			expand_xpow(size(s));
 			for(size_t i=size(s); i--; ) suf[i] = suf[i+1]*X + s[i];
 		}
-		hash_t substr(size_t pos, size_t n) const {
+		hash_t subhash(size_t pos, size_t n) const {
 			assert(pos + n < size(suf));
 			return suf[pos] - suf[pos+n]*xpow[n];
 		}
-		hash_view subview(size_t pos, size_t n) const { return {substr(pos,n), n, xpow[n]}; }
+		hashed substr(size_t pos, size_t n) const { return {subhash(pos,n), n, xpow[n]}; }
 		hash_span subspan(size_t pos, size_t n) const;
 		size_t length() const { return size(data); }
 		char_t operator[](size_t i) const { return data.at(i); }
@@ -87,16 +87,16 @@ namespace kihash {
 		size_t start() const { return offset; }
 		size_t length() const { return len; }
 		char_t operator[](size_t i) const { return (*p)[offset + i]; }
-		hash_t substr(size_t pos, size_t n) const { return p->substr(offset + pos, n); }
-		hash_view subview(size_t pos, size_t n) const { return p->subview(offset + pos, n); }
+		hash_t subhash(size_t pos, size_t n) const { return p->subhash(offset + pos, n); }
+		hashed substr(size_t pos, size_t n) const { return p->substr(offset + pos, n); }
 		hash_span subspan(size_t pos, size_t n) const { return {*p, offset + pos, n}; }
-		friend auto operator+(const hash_span &a, const hash_span &b) { return a.subview(0, a.len) + b.subview(0, b.len); }
+		friend auto operator+(const hash_span &a, const hash_span &b) { return a.substr(0, a.len) + b.substr(0, b.len); }
 		friend bool operator==(const hash_span &a, const hash_span &b) {
-			return a.len == b.len && a.substr(0, a.len) == b.substr(0, b.len);
+			return a.len == b.len && a.subhash(0, a.len) == b.subhash(0, b.len);
 		}
 		friend size_t lcp(const hash_span &a, const hash_span &b) {
 			size_t l = 1, r = min(a.len, b.len) + 1;
-			while(l < r) if(size_t m=(l+r)/2; a.substr(0,m)==b.substr(0,m)) l = m+1; else r = m;
+			while(l < r) if(size_t m=(l+r)/2; a.subhash(0,m)==b.subhash(0,m)) l = m+1; else r = m;
 			return l - 1;
 		}
 		friend bool operator<(const hash_span &a, const hash_span &b) {
