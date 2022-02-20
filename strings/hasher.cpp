@@ -38,31 +38,32 @@ namespace kihash {
 	
 	struct hasher; struct hash_span;
 	struct hashed {
-		hash_t h;
-		size_t length;
-		hashed(): h(0), length(0), px(1) {}
+		hashed(): h(0), px(1), len(0) {}
 		hashed(const hash_t &h, size_t len): hashed(h, len, pow_of_X(len)) {}
 		hashed(const string &s): hashed(hash(s), size(s)) {}
 		hashed(char_t ch): hashed(ch, 1) {}
 		void operator+=(const hashed &a) {
 			h += a.h * px;
-			length += a.length;
 			px *= a.px;
+			len += a.len;
 		}
 		friend hashed operator+(hashed a, const hashed &b) { a+=b; return a; }
-		bool operator==(const hashed &b) const { return h == b.h && length == b.length; }
+		bool operator==(const hashed &b) const { return h == b.h && len == b.len; }
 		uint64_t operator*() const { return *h; }
-		private: hash_t px;
-		hashed(hash_t h, size_t len, hash_t px): h(h), length(len), px(px) {}
+		size_t length() const { return len; }
+		private: hash_t h, px;
+		size_t len;
+		hashed(hash_t h, size_t len, hash_t px): h(h), px(px), len(len) {}
 		friend hasher;
 	};
 	
 	struct hasher {
-		hasher(): hasher(""s) {}
-		hasher(const auto &s): suf(size(s)+1), data(begin(s), end(s)) {
-			expand_xpow(size(s));
-			for(size_t i=size(s); i--; ) suf[i] = suf[i+1]*X + s[i];
+		template<class Iter> hasher(Iter first, Iter last): suf(distance(first,last)+1), data(first,last) {
+			expand_xpow(size(data));
+			for(size_t i=size(data); i--; ) suf[i] = suf[i+1]*X + data[i];
 		}
+		hasher(const string &str): hasher(begin(str), end(str)) {}
+		hasher(): hasher(""s) {}
 		hash_t subhash(size_t pos, size_t n) const {
 			assert(pos + n < size(suf));
 			return suf[pos] - suf[pos+n]*xpow[n];
@@ -90,18 +91,12 @@ namespace kihash {
 		hash_t subhash(size_t pos, size_t n) const { return p->subhash(offset + pos, n); }
 		hashed substr(size_t pos, size_t n) const { return p->substr(offset + pos, n); }
 		hash_span subspan(size_t pos, size_t n) const { return {*p, offset + pos, n}; }
-		friend auto operator+(const hash_span &a, const hash_span &b) { return a.substr(0, a.len) + b.substr(0, b.len); }
-		friend bool operator==(const hash_span &a, const hash_span &b) {
-			return a.len == b.len && a.subhash(0, a.len) == b.subhash(0, b.len);
-		}
+		hashed operator*() const { return substr(0, len); }
+		bool operator==(const hash_span &s) const { return s.len == len && s.subhash(0, len) == subhash(0, len); }
 		friend size_t lcp(const hash_span &a, const hash_span &b) {
 			size_t l = 1, r = min(a.len, b.len) + 1;
 			while(l < r) if(size_t m=(l+r)/2; a.subhash(0,m)==b.subhash(0,m)) l = m+1; else r = m;
 			return l - 1;
-		}
-		friend bool operator<(const hash_span &a, const hash_span &b) {
-			size_t i = lcp(a, b);
-			return i < b.len && (i==a.len || a[i] < b[i]);
 		}
 		private:
 		const hasher *p;
@@ -109,5 +104,10 @@ namespace kihash {
 	};
 	
 	hash_span hasher::subspan(size_t pos, size_t n) const { return {*this, pos, n}; }
+	
+	auto operator<(auto &&a, auto &&b) -> decltype(lcp(a,b), a[a.length()] == b[b.length()]) {
+		size_t i = lcp(a, b);
+		return i < b.length() && (i == a.length() || a[i] < b[i]);
+	}
 }
-//using namespace kihash;
+using namespace kihash;
