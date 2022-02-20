@@ -7,8 +7,8 @@ Polynomial hashing with MOD = 2**61 - 1 and random BASE
 
 ```c++
 hashed h = str;
-h.length // length of hashed string
-*h // hash of string
+h.length() // length of hashed string
+uint64_t raw = *h // hash of string
 if(h1 == h2) // equality check in O(1)
 h = h1 + h2; // concatenations in O(1)
 h += 'a';
@@ -29,6 +29,4 @@ assert(a[s.start()] == s[0]);
 if(s1 == s2) // equality in O(1)
 if(s1 < s2) // operator< in O(log(Length))
 lcp(s1, s2) // longest common prefix in O(log(Length))
-
-hashed h = s1 + s2; // concatenation of spans is hashed
 ```
