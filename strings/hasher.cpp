@@ -49,7 +49,7 @@ namespace kihash {
 		}
 		friend hashed operator+(hashed a, const hashed &b) { a+=b; return a; }
 		bool operator==(const hashed &b) const { return h == b.h && len == b.len; }
-		uint64_t operator*() const { return *h; }
+		hash_t operator*() const { return h; }
 		size_t length() const { return len; }
 		private: hash_t h, px;
 		size_t len;
