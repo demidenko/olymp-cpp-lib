@@ -1,6 +1,6 @@
 template<class S, class W>
 auto dijkstra(const S &start, auto &&gen) {
-	map<S, pair<W,S>> dist{{start,{0,start}}};
+	/*unordered_*/map<S, pair<W,S>> dist{{start,{0,start}}};
 	set<pair<W,S>> q{{0,start}};
 	while(!empty(q)) {
 		auto [dv, v] = move(q.extract(begin(q)).value());
@@ -18,5 +18,4 @@ auto dijkstra(const S &start, auto &&gen) {
 		});
 	}
 	return dist;
-};
-//pass gen as [&](auto &v, auto &&upd) {/*upd(to, edge_cost)*/}
+}; //pass gen as [&](auto &v, auto &&upd) {/*upd(to, edge_cost)*/}
