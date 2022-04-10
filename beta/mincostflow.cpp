@@ -13,19 +13,19 @@ struct mcmf_graph {
 	}
 	
 	pair<F, C> push() { return push(numeric_limits<F>::max()); }
-	pair<F, C> push(const F &flow_limit) {
+	pair<F, C> push(F flow) {
 		const size_t n = size(p);
 		vector<size_t> fr(n, -1);
 		vector<C> d(n, numeric_limits<C>::max());
-		set<pair<C,size_t>> q{{d[S] = 0, S}};
+		priority_queue<pair<C,size_t>, vector<pair<C,size_t>>, greater<pair<C,size_t>>> q;
+		q.emplace(d[S] = 0, S);
 		while(!empty(q)) {
-			const size_t i = begin(q)->second;
-			q.erase(begin(q));
+			auto [di, i] = q.top();
+			if(q.pop(), di > d[i]) continue;
 			for(size_t k : g[i]) if(edges[k].rem() > 0) {
 				size_t j = edges[k].to;
 				C dist = d[i] + edges[k].cost + p[i] - p[j];
 				if(dist < d[j]) {
-					q.erase({d[j], j});
 					q.emplace(d[j] = dist, j);
 					fr[j] = k;
 				}
@@ -33,22 +33,18 @@ struct mcmf_graph {
 		}
 		if(fr[T] == -1) return {0, 0};
 		
-		F flow = flow_limit;
-		for(size_t v = T; v != S; v = edges[fr[v]^1].to) 
-			flow = min(flow, edges[fr[v]].rem());
+		for(size_t k = fr[T]; k != -1; k = fr[edges[k^1].to])
+			flow = min(flow, edges[k].rem());
 		
 		C cost = 0;
-		for(size_t v = T; v != S; ) {
-			size_t k = fr[v];
+		for(size_t k = fr[T]; k != -1; k = fr[edges[k^1].to]) {
 			cost += edges[k].cost * C(flow);
 			edges[k].flow += flow;
 			edges[k^1].flow -= flow;
-			v = edges[k^1].to;
 		}
 		
 		for(size_t i=0; i<n; ++i) p[i] += d[i];
-		
-		return {1, cost};
+		return {flow, cost};
 	}
 	
 	private:
