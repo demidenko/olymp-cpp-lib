@@ -23,9 +23,9 @@ struct factorizer {
 	auto divisors(int x) {
 		static int divs[1500], dn;
 		divs[0] = dn = 1;
-		for(int p=0,k=0,l=0; x>1; x/=p) {
-			if(int c=md[x]; c!=p) p = c, k = dn, l = 0;
-			for(int i=k;i--;) divs[dn++] = divs[l++] * p;
+		for(int p=0,l=0; x>1; x/=p) {
+			if(int c=md[x]; c!=p) p = c, l = 0;
+			for(int r=dn; l<r; ) divs[dn++] = divs[l++] * p;
 		}
 		return vector<int>(divs, divs+dn);
 	}
