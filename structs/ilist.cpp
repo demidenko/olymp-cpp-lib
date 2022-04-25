@@ -1,8 +1,8 @@
 template<class T>
-struct ilist_splay {
+struct ilist {
 	
 	struct node {
-		private: friend ilist_splay;
+		private: friend ilist;
 		node *l, *r, *p;
 		size_t sz;
 		T *value;
@@ -11,7 +11,7 @@ struct ilist_splay {
 	
 	template<class V>
 	struct node_iterator: public std::iterator<std::random_access_iterator_tag, V, ptrdiff_t> {
-		private: friend ilist_splay; node *t;
+		private: friend ilist; node *t;
 		node_iterator(node *ptr): t(ptr) { }
 		public: node_iterator(): node_iterator(nullptr) { }
 		V& operator*() { return *t->value; }
@@ -53,8 +53,8 @@ struct ilist_splay {
 			return position(t) - position(it.t);
 		}
 		
-		ilist_splay& get_ilist_ref() {
-			return *((ilist_splay<T>*)(rightmost(splay(t))->value));
+		ilist& get_ilist_ref() {
+			return *((ilist<T>*)(rightmost(splay(t))->value));
 		}
 	};
 	
@@ -62,28 +62,28 @@ struct ilist_splay {
 	using const_iterator = node_iterator<const T>;
 	
 	struct extracted {
-		private: friend ilist_splay;
+		private: friend ilist;
 		extracted(node *ptr): t(ptr) {}
 		node *t;
 	};
 	
 	
-	ilist_splay(): __end(make_end_node(new_node(),this)), __size(0) {}
-	ilist_splay(extracted e): ilist_splay(e.t) {}
-	explicit ilist_splay(size_t n, const T &value = {}): ilist_splay() { resize(n, value); }
+	ilist(): __end(make_end_node(new_node(),this)), __size(0) {}
+	ilist(extracted e): ilist(e.t) {}
+	explicit ilist(size_t n, const T &value = {}): ilist() { resize(n, value); }
 	
 	template<class I, class = enable_if_t<is_convertible_v<typename iterator_traits<I>::iterator_category, bidirectional_iterator_tag>>>
-	ilist_splay(I first, I last): ilist_splay() { assign(first, last); }
+	ilist(I first, I last): ilist() { assign(first, last); }
 	
-	ilist_splay(ilist_splay &&a) noexcept { *this = std::move(a); }
-	ilist_splay& operator=(ilist_splay &&a) noexcept {
+	ilist(ilist &&a) noexcept { *this = std::move(a); }
+	ilist& operator=(ilist &&a) noexcept {
 		__end = make_end_node(exchange(a.__end, nullptr), this);
 		__size = a.__size;
 		return *this;
 	}
 	
-	ilist_splay(const ilist_splay &a): ilist_splay() { *this = a; }
-	ilist_splay& operator=(const ilist_splay &a) {
+	ilist(const ilist &a): ilist() { *this = a; }
+	ilist& operator=(const ilist &a) {
 		size_t n = a.__size; resize(n);
 		for(auto v = __end, i = a.__end; n--; ) move_prev(v), move_prev(i), *v->value = *i->value;
 		return *this;
@@ -120,7 +120,7 @@ struct ilist_splay {
 	iterator insert(iterator pos, const T &x) { return insert(pos, new_node(x)); }
 	iterator insert(iterator pos, iterator it) { return insert(pos, it.t); }
 	iterator insert(iterator pos, extracted e) { return e.t ? insert(pos, splay(e.t)) : pos; }
-	iterator insert(iterator pos, ilist_splay &&a) { return insert(pos, a.extract(a.begin(),a.end())); }
+	iterator insert(iterator pos, ilist &&a) { return insert(pos, a.extract(a.begin(),a.end())); }
 	
 	extracted extract(iterator first, iterator last) {
 		auto [l, suf] = split(first.t);
@@ -146,8 +146,8 @@ struct ilist_splay {
 	}
 	
 	void remove(iterator it) { remove_node(erase(it).t); }
-	void remove(iterator first, iterator last) { ilist_splay(extract(first, last)).clear(); }
-	ilist_splay erase(iterator first, iterator last) { return extract(first, last); }
+	void remove(iterator first, iterator last) { ilist(extract(first, last)).clear(); }
+	ilist erase(iterator first, iterator last) { return extract(first, last); }
 	
 	iterator partition_point(auto pred) {
 		auto first_false = __end;
@@ -163,7 +163,7 @@ struct ilist_splay {
 	node * __end;
 	size_t __size;
 	
-	ilist_splay(node *v): ilist_splay() {
+	ilist(node *v): ilist() {
 		__size = sz(v);
 		set_left(__end, v);
 		upd_sz(__end);
@@ -275,7 +275,7 @@ struct ilist_splay {
 		return v;
 	}
 	
-	static node* make_end_node(node *end, ilist_splay *list) { end->value = (T*)list; return end; }
+	static node* make_end_node(node *end, ilist *list) { end->value = (T*)list; return end; }
 	static node* new_node(const T &x) { auto t = new_node(); t->value = new_value(x); return t; }
 	static node* new_node() { auto v = pointers_manager<node>::new_ptr(); *v = node(); return v; }
 	static T* new_value(const T &x) { auto v = pointers_manager<T>::new_ptr(); *v = x; return v; }
@@ -299,6 +299,5 @@ struct ilist_splay {
 		static void free_ptr(R *ptr) { ptr_pool.push_back(ptr); }
 	};
 	
-	public: ~ilist_splay() { if(__end) { clear(); __end->value = nullptr; remove_node(__end); __end = nullptr; } }
+	public: ~ilist() { if(__end) { clear(); __end->value = nullptr; remove_node(__end); __end = nullptr; } }
 };
-//template<class T> using ilist = ilist_splay<T>;
