@@ -1,16 +1,16 @@
 auto strong_connected_components(const auto &g) {
-	size_t n = size(g), tn = 0, cn = 0;
-	vector<size_t> tin(n), h(n), comp(n), s;
+	size_t n = size(g), tn = 0, cn = 0, sn = 0;
+	vector<size_t> t(n), h(n), c(n), s(n);
 	function<void(size_t)> css = [&](size_t v) {
-		h[v] = tin[v] = ++tn;
-		s.push_back(v);
+		h[v] = t[v] = ++tn;
+		s[sn++] = v;
 		for(size_t i : g[v]) {
-			if(!tin[i]) css(i);
-			if(tin[i] && !comp[i]) h[v] = min(h[v], h[i]);
+			if(!t[i]) css(i);
+			if(!c[i] && h[i] < h[v]) h[v] = h[i];
 		}
-		if(h[v]==tin[v]) for(++cn; !comp[v]; s.pop_back()) comp[s.back()] = cn;
+		if(h[v] == t[v]) for(++cn; !c[v];) c[s[--sn]] = cn;
 	};
-	for(size_t i=0; i<n; ++i) if(!tin[i]) css(i);
-	for(size_t &x : comp) x = cn-x;
-	return pair(cn, comp);
+	for(size_t i=0; i<n; ++i) if(!t[i]) css(i);
+	for(size_t &x : c) x = cn-x;
+	return pair{cn, c};
 };
