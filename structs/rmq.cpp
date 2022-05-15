@@ -18,6 +18,7 @@ struct rmq {
 		return res;
 	}
 	const T& operator()() const { return t[1]; }
+	const T& operator[](size_t i) const { return t[i+d]; }
 	private:
 	size_t d;
 	valarray<T> t;
