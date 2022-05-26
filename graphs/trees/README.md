@@ -8,7 +8,7 @@ Calls lambda for each subtree created during decomposition. Graph `g` have same 
 
 It is allowed to go to all vertices connected with `centroid` (by dfs/bfs), there will be `sizeof_subtree` such vertices.
 
-If time complexity of lambda is not more than O(sizeof_subtree) then total time is O(nlogn). (O(slogs) -> O(nlog²n), O(s²) -> O(n²)).
+If time complexity of lambda is not more than $O(S)$ then total time is $O(n\log n)$. ($O(S\log S)$ → $O(n\log ^2n)$, $O(S^2)$ → $O(n^2)$).
 
 ### Offline version / Centroid tree
 
@@ -37,12 +37,12 @@ auto centriod_decomposition_offline(const auto &g) {
 ```c++
 heavy_light_decomposition hld(g); //root = 0 by default, otherwise hld(g, root)
 ```
-Build takes O(n) time and memory.
+Build takes $O(n)$ time and memory.
 
 Permutes vertices such vertex `v` now in position `hld.index(v)`.
 
 ### Path Queries
-Decomposes path from `a` to `b` into O(logn) ranges from permutation.
+Decomposes path from `a` to `b` into $O(\log n)$ ranges from permutation.
 ```c++
 hld.query_path(a, b, [&](size_t l, size_t r) {
 	//range [l, r)
@@ -64,14 +64,14 @@ hld.query_path(a, b, [&](size_t l, size_t r) { ... }, true);
 ```
 
 ### LCA
-To find lowest common ancestor in O(logn) use `c = hld.lca(a, b)`.
+To find lowest common ancestor in $O(\log n)$ use `c = hld.lca(a, b)`.
 
 But as bonus both `query_path` and `query_path_strict` returns LCA too.
 
 ### Decomposition by height
 `heavy_light_decomposition<false>` builds Longest-path decomposition (i.e. heavy edge going to subtree with maximum heigth). 
 Convinient for linear time DP on tree. 
-Methods `query_path`/`lca` works correct but in O(sqrt(n)) on [worst case](https://codeforces.com/blog/entry/75410).
+Methods `query_path`/`lca` works correct but in $O(\sqrt n)$ on [worst case](https://codeforces.com/blog/entry/75410).
 
 
 # Tree DP Root Each
@@ -88,7 +88,7 @@ vector<T> res = tree_dp_root_each<T>(g,
 
 `dv` is DP of some subtree with root `v` (same for `di` and `i`).
 
-`link` will be called O(nlogn) times in worst case (more precisely O(log(deg(v))) for each edge [v, i]).
+`link` will be called $O(n\log n)$ times in worst case (more precisely $O(\log(deg_v))$ for each edge [v, i]).
 `single` will be called exaclty 2 times for each vertex.
 
 <details>
