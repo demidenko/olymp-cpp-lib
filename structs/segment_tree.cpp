@@ -11,8 +11,7 @@ struct segment_tree {
 	}
 	
 	T operator()(size_t l, size_t r) const {
-		const static T neutral{};
-		T fl = neutral, fr = neutral;
+		T fl{}, fr{};
 		for(l+=d,r+=d; l<r; l>>=1,r>>=1) {
 			if(l&1) fl = T(fl, t[l]), ++l;
 			if(r&1) --r, fr = T(t[r], fr);
