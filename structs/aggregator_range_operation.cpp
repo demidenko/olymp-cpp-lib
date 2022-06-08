@@ -1,7 +1,7 @@
 template<class T, class O>
-struct segment_tree {
-	explicit segment_tree(size_t n = 0): d(n), t(d*2) {}
-	segment_tree(size_t n, auto gen): segment_tree(n) { if(n) build(0, d, n=1, gen); }
+struct aggregator {
+	explicit aggregator(size_t n = 0): d(n), t(d*2) {}
+	aggregator(size_t n, auto gen): aggregator(n) { if(n) build(0, d, n=1, gen); }
 	
 	void apply(size_t l, size_t r, const O &operation) {
 		if(r > d) r = d;
