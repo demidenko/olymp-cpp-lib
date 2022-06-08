@@ -2,7 +2,7 @@ template<class T>
 struct rsq {
 	explicit rsq(size_t n = 0): f(n) {}
 	rsq(const vector<auto> &vals): f(size(vals)) {
-        copy(begin(vals), end(vals), begin(f));
+		copy(begin(vals), end(vals), begin(f));
 		for(size_t i = size(vals); i--;) if(size_t j = i&(i+1)) f[j-1]+=f[i];
 	}
 	void add(size_t i, const T &val) {
