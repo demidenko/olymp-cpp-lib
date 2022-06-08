@@ -1,6 +1,6 @@
 template<class T>
-struct mitm_table {
-	mitm_table(const vector<auto> &vals): t(empty(vals) ? 1 : __lg(size(vals)) + 1) {
+struct aggregator_static {
+	aggregator_static(const vector<auto> &vals): t(empty(vals) ? 1 : __lg(size(vals)) + 1) {
 		t[0].assign(begin(vals), end(vals));
 		t[0].resize(size_t(1) << size(t));
 		for(size_t p=4, k=1; k<size(t); ++k, p<<=1) {
