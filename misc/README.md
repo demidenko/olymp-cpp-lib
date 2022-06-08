@@ -13,7 +13,7 @@ auto res_bs = parallel_binary_search(queries_count, versions_count, [&](auto vc)
 	dsu g(n);
 	vc.ask = [&](size_t qi) {
 		auto [a, b] = queries[qi];
-		return g[a] == g[b];
+		return g[a] != g[b];
 	};
 	for(auto [i, j] : edges) {
 		g.unite(i, j);
@@ -21,7 +21,7 @@ auto res_bs = parallel_binary_search(queries_count, versions_count, [&](auto vc)
 	}
 });
 ```
-As result `res_bs[i]` will be first version where `ask` returns true for i-th query, or will be `versions_count+1` if `ask` always returns false.
+As result, like in `std::partition_point`, `res_bs[i]` will be first version where `ask` returns false for i-th query, or will be `versions_count+1` if `ask` always returns true.
 
 Versions numbered from 0 to `versions_count`, where 0-th version is state before first commit.
 

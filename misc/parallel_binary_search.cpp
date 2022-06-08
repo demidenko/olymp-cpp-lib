@@ -19,7 +19,7 @@ auto parallel_binary_search(size_t queries_count, size_t versions_count, auto ac
 			ensure(current_version == n, "not all versions are commited");
 			ask.reset();
 			auto it = begin(ranges);
-			for(auto &t : ranges) if(auto &[l, r, qi] = t; l < r) *it++ = t; else result[qi] = r;
+			for(auto &t : ranges) if(t.l < t.r) *it++ = t; else result[t.qi] = t.r;
 			ranges.erase(it, end(ranges));
 		}
 		void commit() {
@@ -38,7 +38,7 @@ auto parallel_binary_search(size_t queries_count, size_t versions_count, auto ac
 			for(rter = iter; rter != end(ranges) && rter->l == iter->l; ++rter);
 			for(auto jter = rter; iter != jter; ) 
 				for(size_t qi = iter->qi, start_qi = qi; ; ) {
-					if((*ask)(qi)) swap(iter->qi, qi), (iter++)->r = m;
+					if(!(*ask)(qi)) swap(iter->qi, qi), (iter++)->r = m;
 					else swap((--jter)->qi, qi), jter->l = m+1;
 					if(qi == start_qi) break ;
 				}
