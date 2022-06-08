@@ -1,5 +1,5 @@
 # Hasher
-Polynomial hashing with MOD = 2**61 - 1 and random BASE
+Polynomial hashing with MOD = $2^{61} - 1$ and random BASE
 
 ```hash_t``` - hash integer value (wrapper of ```uint64_t```)
 
