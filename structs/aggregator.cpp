@@ -1,7 +1,7 @@
-template<class T, bool well_formed = false>
-struct segment_tree {
-	explicit segment_tree(size_t n = 0): d(tree_size(n)), t(d*2) {}
-	segment_tree(size_t n, auto gen): segment_tree(n) {
+template<class T, bool fit_memory = true>
+struct aggregator {
+	explicit aggregator(size_t n = 0): d(tree_size(n)), t(d*2) {}
+	aggregator(size_t n, auto gen): aggregator(n) {
 		for(size_t i=0; i<n; ++i) t[i+d] = gen(i);
 		for(size_t i=d; i-->1;) t[i] = T(t[i*2], t[i*2+1]);
 	}
@@ -20,14 +20,14 @@ struct segment_tree {
 	}
 	
 	decltype(auto) operator()() const {
-		if constexpr (well_formed) return t[1];
+		if constexpr (!fit_memory) return t[1];
 		else return operator()(0, d);
 	}
 	
 	private:
 	size_t d;
 	vector<T> t;
-	static size_t tree_size(size_t n) { return well_formed ? (n>1 ? tree_size((n+1)/2)*2 : 1) : n; }
+	static size_t tree_size(size_t n) { return fit_memory ? n : (n>1 ? tree_size((n+1)/2)*2 : 1); }
 };
 /* implement:
 	struct node {
