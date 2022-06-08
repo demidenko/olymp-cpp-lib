@@ -1,5 +1,5 @@
 template<class T>
-struct persistent_segment_tree {
+struct persistent_aggregator {
 	struct node {
 		node *l, *r;
 		T value;
@@ -8,14 +8,14 @@ struct persistent_segment_tree {
 	};
 	
 	T operator()(size_t l, size_t r) const { return l < r ? calc(root, sz, l, r) : T{}; };
-	persistent_segment_tree set_value(size_t i, const T &value) const { return {set_value(root, sz, i, value), sz}; }
+	persistent_aggregator set_value(size_t i, const T &value) const { return {set_value(root, sz, i, value), sz}; }
 	
-	persistent_segment_tree(const vector<auto> &values): root(build(begin(values),end(values))), sz(size(values)) {}
+	persistent_aggregator(const vector<auto> &values): root(build(begin(values),end(values))), sz(size(values)) {}
 	
 	private:
 	node *root;
 	size_t sz;
-	persistent_segment_tree(node *root, size_t sz): root(root), sz(sz) {}
+	persistent_aggregator(node *root, size_t sz): root(root), sz(sz) {}
 	node* build(auto from, auto to) {
 		if(from >= to) return nullptr;
 		if(from+1 == to) return new node(*from);
