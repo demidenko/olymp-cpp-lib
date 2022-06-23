@@ -11,9 +11,9 @@ struct heavy_light_decomposition {
 	
 	size_t index(size_t v) const { return tin[v]; }
 	
-	size_t lca(size_t x, size_t y) const { return query_path(x, y, [](...){}); }
+	size_t lca(size_t x, size_t y) const { return decompose(x, y, [](...){}); }
 	
-	size_t query_path(size_t x, size_t y, auto process_range, bool ignore_lca = false) const {
+	size_t decompose(size_t x, size_t y, auto process_range, bool ignore_lca = false) const {
 		if(tin[x] > tin[y]) swap(x, y);
 		for(size_t v; tin[v=header[y]] > tin[x]; y = par[v]) process_range(tin[v], tin[y]+1);
 		for(size_t v; (v=header[x]) != header[y]; x = par[v]) process_range(tin[v], tin[x]+1);
@@ -22,10 +22,10 @@ struct heavy_light_decomposition {
 		return x;
 	}
 	
-	size_t query_path_strict(size_t x, size_t y, auto process_range, bool ignore_lca = false) const {
+	size_t decompose_ordered(size_t x, size_t y, auto process_range, bool ignore_lca = false) const {
 		vector<pair<size_t,size_t>> sl, sr;
 		const size_t m = min(tin[x], tin[y]);
-		size_t z = query_path(x, y, [&](size_t l, size_t r) { (r-1 > m ? sr : sl).emplace_back(l, r); }, ignore_lca);
+		size_t z = decompose(x, y, [&](size_t l, size_t r) { (r-1 > m ? sr : sl).emplace_back(l, r); }, ignore_lca);
 		if(tin[x] > tin[y]) sl.swap(sr);
 		for(auto [l, r] : sl) process_range(l, r, true);
 		for(size_t i=size(sr); i--; ) process_range(sr[i].first, sr[i].second, false);
