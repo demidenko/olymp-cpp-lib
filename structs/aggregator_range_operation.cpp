@@ -25,7 +25,7 @@ struct aggregator {
 	mutable vector<pair<T,optional<O>>> t;
 	
 	void cover(size_t v, const O &operation, size_t length) const {
-		t[v].first = T(t[v].first, operation, length);
+		t[v].first.apply(operation, length);
 		if(auto &op = t[v].second) op = O(*op, operation);
 		else op = operation;
 	}
@@ -84,6 +84,6 @@ struct aggregator {
 	struct node {
 		node()
 		node(const node &vl, const node &vr)
-		node(const node &v, const operation &op, size_t length)
+		void apply(const operation &op, size_t length)
 	};
 */
