@@ -1,8 +1,8 @@
 template<class T, class A = T>
-struct rsq_assign {
-	explicit rsq_assign(size_t sz = 0): d(_p2(sz)), t(d*2, {{},nullopt}) {}
+struct rsq_range_assign {
+	explicit rsq_range_assign(size_t sz = 0): d(_p2(sz)), t(d*2, {{},nullopt}) {}
 	
-	rsq_assign(const vector<auto> &vals): rsq_assign(size(vals)) {
+	rsq_range_assign(const vector<auto> &vals): rsq_range_assign(size(vals)) {
 		for(size_t i=0; i<size(vals); ++i) t[i+d].first = vals[i];
 		_build();
 	}

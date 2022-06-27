@@ -1,10 +1,10 @@
 template<class T, const T& f(const T&, const T&) = std::min<T> >
-struct rmq_assign {
+struct rmq_range_assign {
 	constexpr static T neutral = [](T m,T M){return f(m,M)==m?M:m;}(numeric_limits<T>::min(),numeric_limits<T>::max());
 	
-	explicit rmq_assign(size_t sz = 0): d(_p2(sz)), t(d*2, {neutral, false}) {}
+	explicit rmq_range_assign(size_t sz = 0): d(_p2(sz)), t(d*2, {neutral, false}) {}
 	
-	rmq_assign(const vector<auto> &vals): rmq_assign(size(vals)) {
+	rmq_range_assign(const vector<auto> &vals): rmq_range_assign(size(vals)) {
 		for(size_t i=0; i<size(vals); ++i) t[i+d].first = vals[i];
 		_build();
 	}
