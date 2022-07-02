@@ -122,15 +122,6 @@ struct ilist {
 	iterator insert(iterator pos, extracted e) { return e.t ? insert(pos, splay(e.t)) : pos; }
 	iterator insert(iterator pos, ilist &&a) { return insert(pos, a.extract(a.begin(),a.end())); }
 	
-	extracted extract(iterator first, iterator last) {
-		auto [l, suf] = split(first.t);
-		auto [mid, r] = split(last.t);
-		set_left(r, l);
-		upd_sz(r);
-		__size -= sz(mid);
-		return extracted(mid);
-	}
-	
 	iterator erase(iterator it) {
 		assert(it.t != __end);
 		node *t = splay(it.t), *l = t->l, *r = t->r;
@@ -145,11 +136,20 @@ struct ilist {
 		return it;
 	}
 	
-	void remove(iterator it) { remove_node(erase(it).t); }
-	void remove(iterator first, iterator last) { ilist(extract(first, last)).clear(); }
-	ilist erase(iterator first, iterator last) { return extract(first, last); }
+	extracted extract(iterator first, iterator last) {
+		auto [l, suf] = split(first.t);
+		auto [mid, r] = split(last.t);
+		set_left(r, l);
+		upd_sz(r);
+		__size -= sz(mid);
+		return extracted(mid);
+	}
 	
-	iterator partition_point(auto pred) {
+	ilist erase(iterator first, iterator last) { return extract(first, last); }
+	void remove(iterator it) { remove_node(erase(it).t); }
+	void remove(iterator first, iterator last) { erase(first, last).clear(); }
+	
+	iterator partition_point(auto &&pred) {
 		auto first_false = __end;
 		for(node* v = splay(__end)->l, *nxt; v; v = nxt) {
 			if(pred(std::as_const(*v->value))) nxt = v->r;
