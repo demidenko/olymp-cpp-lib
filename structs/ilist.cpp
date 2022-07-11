@@ -33,8 +33,8 @@ struct ilist {
 			}
 		}
 		
-		node_iterator operator++(int) { node* r = t; ++*this; return r; }
-		node_iterator operator--(int) { node* r = t; --*this; return r; }
+		node_iterator operator++(int) { node *r = t; ++*this; return r; }
+		node_iterator operator--(int) { node *r = t; --*this; return r; }
 		
 		node_iterator& operator+=(size_t n) {
 			if(n > 0) splay(t), t = nth(t->r, n-1);
@@ -124,7 +124,7 @@ struct ilist {
 	
 	iterator erase(iterator it) {
 		assert(it.t != __end);
-		node *t = splay(it.t), *l = t->l, *r = t->r;
+		auto t = splay(it.t), l = t->l, r = t->r;
 		t->r = t->l = t->p = r->p = nullptr;
 		upd_sz(t);
 		if(l) {
@@ -151,16 +151,16 @@ struct ilist {
 	
 	iterator partition_point(auto &&pred) {
 		auto first_false = __end;
-		for(node* v = splay(__end)->l, *nxt; v; v = nxt) {
-			if(pred(std::as_const(*v->value))) nxt = v->r;
-			else first_false = v, nxt = v->l;
-			if(nxt == nullptr) splay(v);
+		for(node *v = splay(__end)->l, *t; v; v = t) {
+			if(pred(as_const(*v->value))) t = v->r;
+			else first_false = v, t = v->l;
+			if(t == nullptr) splay(v);
 		}
 		return first_false;
 	}
 	
 	private:
-	node * __end;
+	node *__end;
 	size_t __size;
 	
 	ilist(node *v): ilist() {
@@ -196,22 +196,22 @@ struct ilist {
 		__size = n;
 	}
 	
-	static inline size_t sz(node *t) { return t ? t->sz : 0; }
+	static inline size_t sz(node *v) { return v ? v->sz : 0; }
 	static inline void set_left(node *v, node *to) { v->l = to; if(to) to->p = v; }
 	static inline void set_right(node *v, node *to) { v->r = to; if(to) to->p = v; }
 	static inline void upd_sz(auto... t) { ((t->sz = sz(t->l) + sz(t->r) + 1), ...); }
 	
-	static node* leftmost(node *t) {
-		while(t->l) rotate_right(t), t = t->p;
-		return t;
+	static node* leftmost(node *v) { //get leftmost splaying it to the position of v
+		while(v->l) rotate_right(v), v = v->p;
+		return v;
 	}
 	
-	static node* rightmost(node *t) {
-		while(t->r) rotate_left(t), t = t->p;
-		return t;
+	static node* rightmost(node *v) { //get rightmost splaying it to the position of v
+		while(v->r) rotate_left(v), v = v->p;
+		return v;
 	}
 	
-	static inline ptrdiff_t position(node *t) { return sz(splay(t)->l); }
+	static inline ptrdiff_t position(node *v) { return sz(splay(v)->l); }
 	
 	static node* nth(node *v, size_t n) {
 		assert(n < sz(v));
@@ -255,12 +255,12 @@ struct ilist {
 		upd_sz(g, p, x);
 	}
 	
-	static node* splay(node *x) {
+	static node* splay(node *x) { //make x a root
 		while(node *p = x->p) p->p ? rotate_big(x) : p->l == x ? rotate_right(p) : rotate_left(p);
 		return x;
 	}
 	
-	static pair<node*,node*> split(node *s) {
+	static pair<node*,node*> split(node *s) { //s will be begin of right part
 		node *l = splay(s)->l;
 		if(l) l->p = s->l = nullptr, upd_sz(s);
 		return {l, s};
