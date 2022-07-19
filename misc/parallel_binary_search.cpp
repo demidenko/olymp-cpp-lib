@@ -1,68 +1,56 @@
-auto parallel_binary_search(size_t queries_count, size_t versions_count, auto action) {
-	using ask_type = function<bool(size_t)>;
-	struct holder {
-		static void ensure(bool cond, const char *msg) { if(!cond) __throw_logic_error(msg); }
-		struct range { size_t l, r, qi; };
-		vector<range> ranges;
-		vector<size_t> result;
-		holder(size_t q, size_t n): ranges(q), result(q), n(n) {
-			for(size_t i=0; i<q; ++i) ranges[i] = {0, n+1, i};
-		}
-		void set_ask(ask_type f) {
-			ensure(!ask.has_value(), "ask already set in this scope");
-			ask = f;
-			iter = begin(ranges);
-			current_version = 0;
-			calc();
-		}
-		void finish() {
-			ensure(current_version == n, "not all versions are commited");
-			ask.reset();
-			auto it = begin(ranges);
-			for(auto &t : ranges) if(t.l < t.r) *it++ = t; else result[t.qi] = t.r;
-			ranges.erase(it, end(ranges));
-		}
-		void commit() {
-			current_version++;
-			calc();
-		}
-		private: size_t n, current_version;
-		optional<ask_type> ask;
-		typename decltype(ranges)::iterator iter, rter;
-		void calc() {
-			ensure(ask.has_value(), "ask is not set");
-			ensure(current_version <= n, "too many versions");
-			if(iter == end(ranges)) return ;
-			const size_t m = (iter->l + iter->r) >> 1;
-			if(m > current_version) return ;
-			for(rter = iter; rter != end(ranges) && rter->l == iter->l; ++rter);
-			for(auto jter = rter; iter != jter; ) 
-				for(size_t qi = iter->qi, start_qi = qi; ; ) {
-					if(!(*ask)(qi)) swap(iter->qi, qi), (iter++)->r = m;
-					else swap((--jter)->qi, qi), jter->l = m+1;
-					if(qi == start_qi) break ;
-				}
-			iter = rter;
-		}
+auto parallel_binary_search(size_t queries_count, size_t versions_count, auto &&action) {
+	static auto ensure = [](bool cond, const char *msg) { if(!cond) __throw_logic_error(msg); };
+	using pred_t = function<bool(size_t)>;
+	
+	struct assign_helper {
+		assign_helper(function<void(pred_t)> f): set_pred(f) {}
+		void operator=(pred_t pred) { set_pred(pred); }
+		private: function<void(pred_t)> set_pred;
+	};
+	struct vc { assign_helper pred; function<void()> commit; };
+	
+	struct range { size_t l, r, qi; };
+	vector<range> ranges(queries_count);
+	for(size_t i=0; i<queries_count; ++i) ranges[i] = {0, versions_count + 1, i};
+	
+	optional<pred_t> pred;
+	size_t current_version;
+	decltype(begin(ranges)) iter, rter;
+	
+	auto calc = [&] {
+		ensure(pred.has_value(), "pred is not set");
+		ensure(current_version <= versions_count, "too many versions");
+		if(iter == end(ranges)) return ;
+		const size_t m = (iter->l + iter->r) >> 1;
+		if(m > current_version) return ;
+		for(rter = iter; rter != end(ranges) && rter->l == iter->l; ++rter);
+		for(auto jter = rter; iter != jter; ) 
+			for(size_t qi = iter->qi, start_qi = qi; ; ) {
+				if(!(*pred)(qi)) swap(iter->qi, qi), (iter++)->r = m;
+				else swap((--jter)->qi, qi), jter->l = m+1;
+				if(qi == start_qi) break ;
+			}
+		iter = rter;
 	};
 	
-	struct version_controller {
-		explicit version_controller(holder &h): h(h), ask(h) {}
-		void commit() { h.commit(); }
-		private: holder &h;
-		struct helper {
-			helper(holder &h): h(h) {}
-			void operator=(ask_type f) { h.set_ask(f); }
-			private: holder &h;
-		};
-		public: helper ask;
-	};
-	
-	holder h(queries_count, versions_count);
-	while(!empty(h.ranges)) {
-		action(version_controller{h});
-		h.finish();
+	vector<size_t> result(queries_count);
+	while(!empty(ranges)) {
+		action(vc {
+			assign_helper([&](pred_t f) {
+				ensure(!pred.has_value(), "pred already set in this scope");
+				pred = f;
+				iter = begin(ranges);
+				current_version = 0;
+				calc();
+			}),
+			[&] { ++current_version; calc(); }
+		});
+		ensure(current_version == versions_count, "not all versions are commited");
+		pred.reset();
+		auto it = begin(ranges);
+		for(auto &t : ranges) if(t.l < t.r) *it++ = t; else result[t.qi] = t.r;
+		ranges.erase(it, end(ranges));
 	}
 	
-	return h.result;
+	return result;
 }
