@@ -22,7 +22,7 @@ struct heavy_light_decomposition {
 		return x;
 	}
 	
-	size_t decompose_ordered(size_t x, size_t y, auto process_range, bool ignore_lca = false) const {
+	size_t decompose_ordered(size_t x, size_t y, auto &&process_range, bool ignore_lca = false) const {
 		vector<pair<size_t,size_t>> sl, sr;
 		const size_t m = min(tin[x], tin[y]);
 		size_t z = decompose(x, y, [&](size_t l, size_t r) { (r-1 > m ? sr : sl).emplace_back(l, r); }, ignore_lca);
