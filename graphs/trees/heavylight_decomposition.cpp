@@ -13,12 +13,12 @@ struct heavy_light_decomposition {
 	
 	size_t lca(size_t x, size_t y) const { return decompose(x, y, [](...){}); }
 	
-	size_t decompose(size_t x, size_t y, auto process_range, bool ignore_lca = false) const {
-		if(tin[x] > tin[y]) swap(x, y);
-		for(size_t v; tin[v=header[y]] > tin[x]; y = par[v]) process_range(tin[v], tin[y]+1);
-		for(size_t v; (v=header[x]) != header[y]; x = par[v]) process_range(tin[v], tin[x]+1);
-		if(tin[x] > tin[y]) swap(x, y);
-		if(size_t l = tin[x]+ignore_lca, r = tin[y]+1; l<r) process_range(l, r);
+	size_t decompose(size_t x, size_t y, auto &&process_range, bool ignore_lca = false) const {
+		for(size_t v;; process_range(tin[v], tin[y] + 1), y = par[v]) {
+			if(tin[x] > tin[y]) swap(x, y);
+			if((v = header[y]) == header[x]) break ;
+		}
+		if(size_t l = tin[x]+ignore_lca, r = tin[y]+1; l < r) process_range(l, r);
 		return x;
 	}
 	
