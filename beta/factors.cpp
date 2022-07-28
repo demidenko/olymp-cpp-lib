@@ -23,7 +23,7 @@ bool is_prime(T n) {
 	if constexpr (!is_same_v<T,int32_t>) {
 		if(n <= numeric_limits<int32_t>::max()) return is_prime((int32_t)n);
 	}
-	if constexpr (is_same_v<T,int32_t>)
+	if constexpr (sizeof(T) <= sizeof(int32_t))
 		return miller_rabin_multitest<T, 2, 7, 61>(n);
 	else
 		return miller_rabin_multitest<T, 2, 325, 9375, 28178, 450775, 9780504, 1795265022>(n);
