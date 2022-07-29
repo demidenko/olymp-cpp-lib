@@ -49,3 +49,14 @@ auto pollard(T n) -> enable_if_t<is_integral_v<T>, vector<P>> {
 		return f;
 	}
 }
+
+template<class T>
+vector<T> factors(T n) {
+	assert(n > 0);
+	vector<T> f;
+	while(n%2 == 0) n/=2, f.push_back(2);
+	for(T p=3; p <= 37 && p*p <= n; p += 2) 
+		while(n%p == 0) n/=p, f.push_back(p);
+	for(T p : pollard(n)) f.push_back(p);
+	return f;
+}
