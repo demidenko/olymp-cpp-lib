@@ -7,7 +7,8 @@ bool miller_rabin(T n) {
 	auto test = [n](T d, uint32_t s, Squared<T> a) {
 		Squared<T> r = 1; 
 		for(; d; d>>=1, a = a*a %n) if(d&1) r = r*a %n;
-		for(; s--; r = r*r %n) if(r == 1 || r == n-1) return true;
+		if(r == 1) return true;
+		for(; s--; r = r*r %n) if(r == n-1) return true;
 		return false;
 	};
 	T d = n-1;
