@@ -4,17 +4,16 @@ template<class T> using Squared = conditional_t<sizeof(T) == 8, uint128_t, uint6
 template<class T, int... A>
 bool miller_rabin(T n) {
 	assert(n > 1 && n % 2 == 1);
-	auto test = [n](T d, uint32_t s, Squared<T> a) {
+	auto test = [n](uint32_t s, Squared<T> a) {
 		Squared<T> r = 1; 
-		for(; d; d>>=1, a = a*a %n) if(d&1) r = r*a %n;
+		for(T d = n>>s; d; d>>=1, a = a*a %n) if(d&1) r = r*a %n;
 		if(r == 1) return true;
 		for(; s--; r = r*r %n) if(r == n-1) return true;
 		return false;
 	};
-	T d = n-1;
-	uint32_t s = 0;
-	while(d%2 == 0) d/=2, ++s;
-	return ((A >= n || test(d, s, A)) && ...);
+	uint32_t s = 1;
+	while(~n >> s &1) ++s;
+	return ((A >= n || test(s, A)) && ...);
 }
 
 template<class T>
