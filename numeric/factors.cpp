@@ -42,7 +42,7 @@ auto pollard(T n) -> enable_if_t<is_integral_v<T>, vector<P>> {
 	static mt19937 rnd(chrono::high_resolution_clock::now().time_since_epoch().count());
 	
 	for(;;) for(T x = rnd()%(n-3)+3, y = g(x); x != y; x=g(x), y=g(g(y)))
-	if(const T d = gcd(x<y ? y-x : x-y, n); d == n) break; else if(d > 1) {
+	if(const T d = gcd(x<y ? y-x : x-y, n); d > 1) {
 		vector<P> f;
 		for(P p : pollard<T,P>(min(d,n/d))) while(n%p == 0) n/=p, f.push_back(p);
 		for(P p : pollard<T,P>(n)) f.push_back(p);
