@@ -6,10 +6,8 @@ struct aggregator_queue {
 	}
 	void pop() {
 		if(empty(l)) {
-			for(T m{}; !empty(r); ) {
-				l.emplace_back(r.back(), m);
-				r.pop_back();
-			}
+			for(T m{}; !empty(r); r.pop_back())
+				m = l.emplace_back(r.back(), m);
 			rs = {};
 		}
 		l.pop_back();
