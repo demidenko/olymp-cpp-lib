@@ -181,7 +181,7 @@ struct ilist {
 	}
 	
 	void resize_less(const size_t n) { assert(n <= __size);
-		auto [v, t] = split(nth(splay(__end), n));
+		auto v = split(nth(splay(__end), n)).first;
 		for(auto [r, i] = pair(__end, __size-n); i--; ) move_prev(r), remove_node(r);
 		set_left(splay(__end), v);
 		upd_sz(__end);
