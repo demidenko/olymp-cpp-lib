@@ -13,24 +13,21 @@ struct mincost_flow_graph {
 	}
 	
 	struct result { F flow; C cost; };
-	result push() { return push(numeric_limits<F>::max()); }
-	result push(F flow) {
+	result push(F flow = numeric_limits<F>::max()) {
 		vector<size_t> fr(size(p), -1);
 		vector<C> d(size(p), numeric_limits<C>::max());
 		priority_queue<pair<C,size_t>, vector<pair<C,size_t>>, greater<pair<C,size_t>>> q;
 		q.emplace(d[S] = 0, S);
 		while(!empty(q)) {
 			auto [di, i] = q.top();
-			if(q.pop(), di > d[i]) continue;
+			if(q.pop(), di > d[i]) continue ;
 			for(size_t k : g[i]) if(edges[k].rem() > 0) {
 				size_t j = edges[k].to;
 				C dist = d[i] + edges[k].cost + p[i] - p[j];
-				if(dist < d[j]) {
-					q.emplace(d[j] = dist, j);
-					fr[j] = k;
-				}
+				if(dist < d[j]) q.emplace(d[j] = dist, j), fr[j] = k;
 			}
 		}
+		
 		if(fr[T] == -1) return {0, 0};
 		
 		for(size_t k = fr[T]; k != -1; k = fr[edges[k^1].to])
@@ -43,8 +40,16 @@ struct mincost_flow_graph {
 			edges[k^1].flow -= flow;
 		}
 		
-		for(size_t i=0; i<size(p); ++i) p[i] += d[i];
+		for(size_t i = 0; i < size(p); ++i) p[i] += d[i];
 		return {flow, cost};
+	}
+	
+	optional<C> mincost(F flow) {
+		C cost = 0;
+		while(flow > 0) 
+			if(auto [f, c] = push(flow); f == 0) return nullopt;
+			else flow -= f, cost += c;
+		return cost;
 	}
 	
 	private:
