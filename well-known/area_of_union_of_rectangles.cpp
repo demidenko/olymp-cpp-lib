@@ -1,4 +1,5 @@
-ll area_of_union_of_rectangles(
+//requires @aggregator_range_operation
+int64_t area_of_union_of_rectangles(
 	//[ax, ay, bx, by] all inclusive
 	const vector<tuple<int,int,int,int>> &rects
 ) {
@@ -36,7 +37,7 @@ ll area_of_union_of_rectangles(
 		return icnt{0, ys[i+1]-ys[i]};
 	});
 	
-	vector<tuple<int,char,size_t,size_t>> events;
+	vector<tuple<int,int,size_t,size_t>> events;
 	events.reserve(size(rects)*2);
 	for(auto [ax, ay, bx, by] : rects) {
 		size_t sl = lower_bound(begin(ys), end(ys), ay) - begin(ys);
@@ -48,12 +49,11 @@ ll area_of_union_of_rectangles(
 		return get<0>(e1) < get<0>(e2);
 	});
 	
-	ll area = 0, lx = 0;
-	for(auto [x, tp, sl, sr] : events) {
+	int64_t area = 0, lx = 0;
+	for(auto [x, sig, sl, sr] : events) {
 		auto &cur = t();
-		ll filled = cur.x == 0 ? H - cur.cnt : H;
-		area += filled * (x - lx);
-		t.apply(sl, sr, add_op{tp});
+		area += (x - lx) * (cur.x == 0 ? H - cur.cnt : H);
+		t.apply(sl, sr, add_op{sig});
 		lx = x;
 	}
 	
