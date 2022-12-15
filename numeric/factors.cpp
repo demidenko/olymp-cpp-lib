@@ -1,5 +1,5 @@
 using uint128_t = __uint128_t;
-template<class T> using Squared = conditional_t<sizeof(T) == 8, uint128_t, uint64_t>;
+template<class T> using Squared = conditional_t<sizeof(T) < sizeof(uint64_t), uint64_t, uint128_t>;
 
 template<class T, int... A>
 bool miller_rabin(T n) {
@@ -18,8 +18,7 @@ bool miller_rabin(T n) {
 
 template<class T>
 auto is_prime(T n) -> enable_if_t<is_integral_v<T>, bool> {
-	if(n < 2) return false;
-	if(n%2 == 0) return n == 2;
+	if(n < 2 || n % 2 == 0) return n == 2;
 	if constexpr (is_signed_v<T>) return is_prime<make_unsigned_t<T>>(n);
 	if constexpr (sizeof(T) > sizeof(uint32_t)) {
 		if(n <= numeric_limits<uint32_t>::max()) return is_prime<uint32_t>(n);
@@ -27,26 +26,25 @@ auto is_prime(T n) -> enable_if_t<is_integral_v<T>, bool> {
 	} else return miller_rabin<T, 2, 7, 61>(n);
 }
 
-template<class T, class P = T>
-auto pollard(T n) -> enable_if_t<is_integral_v<T>, vector<P>> {
+template<class T>
+auto pollard(T n, auto &res) -> enable_if_t<is_integral_v<T>, void> {
 	assert(n > 0 && n % 2 == 1);
-	if constexpr (is_signed_v<T>) return pollard<make_unsigned_t<T>,P>(n);
-	if(n == 1) return {};
-	if(is_prime(n)) return {P(n)};
-	
+	if constexpr (is_signed_v<T>) return pollard<make_unsigned_t<T>>(n, res);
 	if constexpr (sizeof(T) > sizeof(uint32_t)) {
-		if(n <= numeric_limits<uint32_t>::max()) return pollard<uint32_t,P>(n);
+		if(n <= numeric_limits<uint32_t>::max()) return pollard<uint32_t>(n, res);
 	}
 	
+	if(n == 1) return ;
+	if(is_prime(n)) { res.push_back(n); return ; }
+	
 	auto &&g = [n](Squared<T> x) -> T { return (x * x + 1) %n; };
-	static mt19937 rnd(chrono::high_resolution_clock::now().time_since_epoch().count());
+	static mt19937 rnd(chrono::steady_clock::now().time_since_epoch().count());
 	
 	for(;;) for(T x = rnd()%(n-3)+3, y = g(x); x != y; x=g(x), y=g(g(y)))
 	if(const T d = gcd(x<y ? y-x : x-y, n); d > 1) {
-		vector<P> f;
-		for(P p : pollard<T,P>(min(d,n/d))) while(n%p == 0) n/=p, f.push_back(p);
-		for(P p : pollard<T,P>(n)) f.push_back(p);
-		return f;
+		pollard<T>(d, res);
+		pollard<T>(n / d, res);
+		return ;
 	}
 }
 
@@ -57,6 +55,6 @@ vector<T> factors(T n) {
 	while(n%2 == 0) n/=2, f.push_back(2);
 	for(T p=3; p <= 37 && p*p <= n; p += 2) 
 		while(n%p == 0) n/=p, f.push_back(p);
-	for(T p : pollard(n)) f.push_back(p);
+	pollard(n, f);
 	return f;
 }
