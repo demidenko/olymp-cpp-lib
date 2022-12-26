@@ -1,7 +1,7 @@
 using uint128_t = __uint128_t;
 template<class T> using Squared = conditional_t<sizeof(T) < sizeof(uint64_t), uint64_t, uint128_t>;
 
-template<class T, int... A>
+template<uint32_t... A, class T>
 bool miller_rabin(T n) {
 	assert(n > 1 && n % 2 == 1);
 	auto test = [n](uint32_t s, Squared<T> a) {
@@ -22,8 +22,8 @@ auto is_prime(T n) -> enable_if_t<is_integral_v<T>, bool> {
 	if constexpr (is_signed_v<T>) return is_prime<make_unsigned_t<T>>(n);
 	if constexpr (sizeof(T) > sizeof(uint32_t)) {
 		if(n <= numeric_limits<uint32_t>::max()) return is_prime<uint32_t>(n);
-		return miller_rabin<T, 2, 325, 9375, 28178, 450775, 9780504, 1795265022>(n);
-	} else return miller_rabin<T, 2, 7, 61>(n);
+		return miller_rabin<2, 325, 9375, 28178, 450775, 9780504, 1795265022>(n);
+	} else return miller_rabin<2, 7, 61>(n);
 }
 
 template<class T>
@@ -41,11 +41,8 @@ auto pollard(T n, auto &res) -> enable_if_t<is_integral_v<T>, void> {
 	static mt19937 rnd(chrono::steady_clock::now().time_since_epoch().count());
 	
 	for(;;) for(T x = rnd()%(n-3)+3, y = g(x); x != y; x=g(x), y=g(g(y)))
-	if(const T d = gcd(x<y ? y-x : x-y, n); d > 1) {
-		pollard<T>(d, res);
-		pollard<T>(n / d, res);
-		return ;
-	}
+	if(const T d = gcd(x<y ? y-x : x-y, n); d > 1)
+		return pollard<T>(d, res), pollard<T>(n / d, res);
 }
 
 template<class T>
@@ -53,7 +50,7 @@ vector<T> factors(T n) {
 	assert(n > 0);
 	vector<T> f;
 	while(n%2 == 0) n/=2, f.push_back(2);
-	for(T p=3; p <= 37 && p*p <= n; p += 2) 
+	for(T p = 3; p <= 37 && p*p <= n; p += 2) 
 		while(n%p == 0) n/=p, f.push_back(p);
 	pollard(n, f);
 	return f;
