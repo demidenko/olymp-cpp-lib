@@ -1,5 +1,5 @@
 template<class... T>
-void centriod_decomposition(const graph_t<T...> &g, auto action) {
+void centriod_decomposition(const graph_t<T...> &g, auto &&action) {
 	const size_t n = size(g); if(n == 0) return ;
 	vector<size_t> sub(n, 1), p(n, -1), q(n);
 	for(size_t k=0, qn=1; k<qn; ++k) {
@@ -8,7 +8,6 @@ void centriod_decomposition(const graph_t<T...> &g, auto action) {
 	}
 	for(size_t i=n-1; i; --i) sub[p[q[i]]] += sub[q[i]];
 	graph_t<T...> tree(n);
-	auto add_edge = [&tree](auto&&... args) { tree.add_edge(args...); };
 	vector<bool> used(n);
 	function<void(size_t)> go = [&](size_t c) {
 		const size_t sz = sub[c];
@@ -18,9 +17,9 @@ void centriod_decomposition(const graph_t<T...> &g, auto action) {
 		used[c] = true;
 		for(auto &e : g[c]) if(size_t i=e; !used[i]) {
 			go(i);
-			std::apply(add_edge, tuple_cat(tuple{c}, tuple<size_t,T...>{e}));
+			apply([&](auto&&...x){ tree.add_edge(c, x...); }, edge_t<T...>{e});
 		}
-		action(std::as_const(tree), c, sz);
+		action(as_const(tree), c, sz);
 	};
 	go(0);
 }
