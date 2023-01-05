@@ -1,5 +1,5 @@
 auto parallel_binary_search(size_t queries_count, size_t versions_count, auto &&action) {
-	static auto ensure = [](bool cond, const char *msg) { if(!cond) __throw_logic_error(msg); };
+	auto ensure = [](bool cond, const char *msg) { if(!cond) __throw_logic_error(msg); };
 	using pred_t = function<bool(size_t)>;
 	
 	struct assign_helper {
@@ -22,16 +22,11 @@ auto parallel_binary_search(size_t queries_count, size_t versions_count, auto &&
 			ensure(pred.has_value(), "pred is not set");
 			ensure(current_version <= versions_count, "too many versions");
 			if(it == end(ranges)) return ;
-			const size_t m = (it->l + it->r) >> 1;
+			const size_t m = (it->l + it->r) / 2, pl = it->l;
 			if(m > current_version) return ;
-			auto lt = it, rt = it;
-			while(rt != end(ranges) && rt->l == lt->l) ++rt;
-			for(it = rt; lt != rt; ) 
-				for(size_t qi = lt->qi, start_qi = qi; ; ) {
-					if((*pred)(qi)) swap((--rt)->qi, qi), rt->l = m + 1;
-					else swap(lt->qi, qi), (lt++)->r = m;
-					if(qi == start_qi) break ;
-				}
+			for(auto mt = it; it != end(ranges) && it->l == pl; ++it)
+				if((*pred)(it->qi)) it->l = m + 1; 
+				else it->r = m, swap(*it, *mt), ++mt;
 		};
 		action(vc {
 			assign_helper([&](pred_t f) {
