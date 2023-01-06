@@ -52,8 +52,8 @@ namespace NTT {
 			return r == 1;
 		}
 		
-		template<class T, size_t min_h> struct is_ntt_modint: false_type {};
-		template<decltype(auto) mod, size_t min_h> struct is_ntt_modint<modint<mod>,min_h>: bool_constant<is_same_v<decltype(mod),int> && ctz(mod-1)>=min_h && is_ntt_prime(mod)> {};
+		template<class T, size_t min_h> constexpr bool is_ntt_modint = false;
+		template<decltype(auto) mod, size_t min_h> constexpr bool is_ntt_modint<modint<mod>,min_h> = is_same_v<decltype(mod),int> && ctz(mod-1)>=min_h && is_ntt_prime(mod);
 		
 		template<size_t min_h, int min_mod, size_t ...I>
 		constexpr auto __gen_ntt_mods(index_sequence<I...>) {
@@ -94,7 +94,7 @@ namespace NTT {
 	template<class T, size_t max_size = 1<<23, size_t count_mods = 3, int min_mod = (int)8e8>
 	auto convolution(const vector<auto> &a, const vector<auto> &b) {
 		constexpr size_t h = max(lg_geq(max_size), min_adequate_h);
-		if constexpr (is_ntt_modint<T,h>::value) return convolution<T::get_mod()>(a, b);
+		if constexpr (is_ntt_modint<T, h>) return convolution<T::get_mod()>(a, b);
 		else return convolution<T>(a, b, make_ntt_mods<count_mods, h, min_mod>{});
 	}
 }
