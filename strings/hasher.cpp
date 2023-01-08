@@ -82,6 +82,7 @@ namespace kihash {
 		hash_t subhash(size_t pos, size_t n) const { return p->subhash(offset + pos, n); }
 		hashed substr(size_t pos, size_t n) const { return p->substr(offset + pos, n); }
 		hash_span subspan(size_t pos, size_t n) const { return {*p, offset + pos, n}; }
+		hash_span operator()(size_t l, size_t r) const { return subspan(l, r-l); }
 		hashed operator*() const { return substr(0, len); }
 		bool operator==(const hash_span &s) const { return s.len == len && s.subhash(0, len) == subhash(0, len); }
 		friend size_t lcp(const hash_span &a, const hash_span &b) {
