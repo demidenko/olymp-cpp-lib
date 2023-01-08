@@ -60,7 +60,7 @@ namespace kihash {
 			return suf[pos] - suf[pos+n]*xpow[n];
 		}
 		hashed substr(size_t pos, size_t n) const { return {subhash(pos,n), n, xpow[n]}; }
-		hash_span subspan(size_t pos, size_t n) const;
+		hash_span subspan(size_t, size_t) const; hash_span operator()(size_t, size_t) const;
 		size_t length() const { return size(data); }
 		char_t operator[](size_t i) const { return data.at(i); }
 		private: 
@@ -95,8 +95,9 @@ namespace kihash {
 	};
 	
 	hash_span hasher::subspan(size_t pos, size_t n) const { return {*this, pos, n}; }
+	hash_span hasher::operator()(size_t l, size_t r) const { return subspan(l, r-l); }
 	
-	auto operator<(auto &&a, auto &&b) -> decltype(lcp(a,b), a[a.length()] == b[b.length()]) {
+	auto operator<(auto &&a, auto &&b) -> decltype(lcp(a,b), a[a.length()] < b[b.length()]) {
 		size_t i = lcp(a, b);
 		return i < b.length() && (i == a.length() || a[i] < b[i]);
 	}
