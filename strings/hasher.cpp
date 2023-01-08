@@ -30,17 +30,11 @@ namespace kihash {
 		return p;
 	}
 	
-	hash_t hash(const string &s) {
-		hash_t h;
-		for(size_t i=size(s); i--; ) h = h*X + s[i];
-		return h;
-	}
-	
 	struct hasher; struct hash_span;
 	struct hashed {
 		hashed(): h(0), px(1), len(0) {}
 		hashed(const hash_t &h, size_t len): hashed(h, len, pow_of_X(len)) {}
-		hashed(const string &s): hashed(hash(s), size(s)) {}
+		hashed(const string &s): hashed() { for(auto ch : s) *this += ch; }
 		hashed(char_t ch): hashed(ch, 1, X) {}
 		void operator+=(const hashed &a) { h += a.h*px; px *= a.px; len += a.len; }
 		void operator+=(char_t ch) { h += ch*px; px *= X; ++len; }
