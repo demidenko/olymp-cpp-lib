@@ -22,7 +22,7 @@ namespace kihash {
 		}
 	};
 	
-	const hash_t X = uint64_t(309935741)<<32 | mt19937(chrono::high_resolution_clock::now().time_since_epoch().count())() | 1;
+	const hash_t X = uint64_t(309935741)<<32 | mt19937(chrono::steady_clock::now().time_since_epoch().count())() | 1;
 	
 	hash_t pow_of_X(size_t n) {
 		hash_t p = 1, a = X;
