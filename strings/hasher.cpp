@@ -41,13 +41,10 @@ namespace kihash {
 		hashed(): h(0), px(1), len(0) {}
 		hashed(const hash_t &h, size_t len): hashed(h, len, pow_of_X(len)) {}
 		hashed(const string &s): hashed(hash(s), size(s)) {}
-		hashed(char_t ch): hashed(ch, 1) {}
-		void operator+=(const hashed &a) {
-			h += a.h * px;
-			px *= a.px;
-			len += a.len;
-		}
-		friend hashed operator+(hashed a, const hashed &b) { a+=b; return a; }
+		hashed(char_t ch): hashed(ch, 1, X) {}
+		void operator+=(const hashed &a) { h += a.h*px; px *= a.px; len += a.len; }
+		void operator+=(char_t ch) { h += ch*px; px *= X; ++len; }
+		friend hashed operator+(hashed a, auto &&b) { a += b; return a; }
 		bool operator==(const hashed &b) const { return h == b.h && len == b.len; }
 		hash_t operator*() const { return h; }
 		size_t length() const { return len; }
