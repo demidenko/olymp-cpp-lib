@@ -21,4 +21,3 @@ template<decltype(auto) mod> struct modint { static_assert(is_same_v<decay_t<dec
 	private: int x;
 };
 using mint = modint<(int)998244353>;
-mint operator""m(unsigned long long x) { return mint(x); }
