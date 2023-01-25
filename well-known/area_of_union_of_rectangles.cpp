@@ -1,8 +1,7 @@
 //requires @aggregator_range_operation
 template<class S, class D = int, class P>
 S area_of_union_of_rectangles(
-	//[ax, ay, bx, by] all inclusive
-	const vector<tuple<P,P,P,P>> &rects
+	const vector<tuple<P,P,P,P>> &rects //[ax, ay, bx, by]
 ) {
 	struct add_op {
 		D a;
@@ -25,9 +24,9 @@ S area_of_union_of_rectangles(
 	
 	vector<P> ys;
 	for(auto [ax, ay, bx, by] : rects) {
-		assert(ax <= bx && ay <= by);
+		assert(ax < bx && ay < by);
 		ys.push_back(ay);
-		ys.push_back(by+1);
+		ys.push_back(by);
 	}
 	if(empty(ys)) return 0;
 	
@@ -42,9 +41,9 @@ S area_of_union_of_rectangles(
 	events.reserve(size(rects)*2);
 	for(auto [ax, ay, bx, by] : rects) {
 		size_t sl = lower_bound(begin(ys), end(ys), ay) - begin(ys);
-		size_t sr = upper_bound(begin(ys), end(ys), by) - begin(ys);
+		size_t sr = lower_bound(begin(ys), end(ys), by) - begin(ys);
 		events.emplace_back(ax, +1, sl, sr);
-		events.emplace_back(bx+1, -1, sl, sr);
+		events.emplace_back(bx, -1, sl, sr);
 	}
 	sort(begin(events), end(events), [](auto &e1, auto &e2) {
 		return get<0>(e1) < get<0>(e2);
