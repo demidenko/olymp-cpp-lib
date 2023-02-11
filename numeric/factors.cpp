@@ -1,11 +1,11 @@
 using uint128_t = __uint128_t;
-template<class T> using Squared = conditional_t<sizeof(T) < sizeof(uint64_t), uint64_t, uint128_t>;
+template<class T> using square_t = conditional_t<sizeof(T) < sizeof(uint64_t), uint64_t, uint128_t>;
 
 template<uint32_t... A, class T>
 bool miller_rabin(T n) {
 	assert(n > 1 && n % 2 == 1);
-	auto test = [n](uint32_t s, Squared<T> a) {
-		Squared<T> r = 1; 
+	auto test = [n](uint32_t s, square_t<T> a) {
+		square_t<T> r = 1; 
 		for(T d = n>>s; d; d>>=1, a = a*a %n) if(d&1) r = r*a %n;
 		if(r == 1) return true;
 		for(; s--; r = r*r %n) if(r == n-1) return true;
@@ -37,7 +37,7 @@ auto pollard(T n, auto &res) -> enable_if_t<is_integral_v<T>, void> {
 	if(n == 1) return ;
 	if(is_prime(n)) { res.push_back(n); return ; }
 	
-	auto &&g = [n](Squared<T> x) -> T { return (x * x + 1) %n; };
+	auto &&g = [n](square_t<T> x) -> T { return (x * x + 1) %n; };
 	static mt19937 rnd(chrono::steady_clock::now().time_since_epoch().count());
 	
 	for(;;) for(T x = rnd()%(n-3)+3, y = g(x); x != y; x=g(x), y=g(g(y)))
