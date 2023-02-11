@@ -37,12 +37,13 @@ auto pollard(T n, auto &res) -> enable_if_t<is_integral_v<T>, void> {
 	if(n == 1) return ;
 	if(is_prime(n)) { res.push_back(n); return ; }
 	
-	auto &&g = [n](square_t<T> x) -> T { return (x * x + 1) %n; };
-	static mt19937 rnd(chrono::steady_clock::now().time_since_epoch().count());
-	
-	for(;;) for(T x = rnd()%(n-3)+3, y = g(x); x != y; x=g(x), y=g(g(y)))
-	if(const T d = gcd(x<y ? y-x : x-y, n); d > 1)
-		return pollard<T>(d, res), pollard<T>(n / d, res);
+	static mt19937_64 rnd(chrono::steady_clock::now().time_since_epoch().count());
+	for(;;) {
+		auto &&g = [n, a=rnd()%(n-1)+1](square_t<T> x) { return (x*x + a) %n; };
+		for(T x = rnd()%(n-3)+3, y = g(x); x != y; x=g(x), y=g(g(y)))
+		if(const T d = gcd(x<y ? y-x : x-y, n); d > 1)
+			return pollard<T>(d, res), pollard<T>(n / d, res);
+	}
 }
 
 template<class T>
