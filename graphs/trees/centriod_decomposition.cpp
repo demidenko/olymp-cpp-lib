@@ -2,10 +2,8 @@ template<class... T>
 void centriod_decomposition(const graph_t<T...> &g, auto &&action) {
 	const size_t n = size(g); if(n == 0) return ;
 	vector<size_t> sub(n, 1), p(n, -1), q(n);
-	for(size_t k=0, qn=1; k<qn; ++k) {
-		size_t v = q[k];
+	for(size_t qn=1; size_t v : q)
 		for(size_t i : g[v]) if(i!=p[v]) q[qn++] = i, p[i] = v;
-	}
 	for(size_t i=n-1; i; --i) sub[p[q[i]]] += sub[q[i]];
 	graph_t<T...> tree(n);
 	vector<bool> used(n);
