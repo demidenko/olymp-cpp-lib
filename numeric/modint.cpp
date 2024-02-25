@@ -1,6 +1,7 @@
-template<decltype(auto) mod> struct modint { static_assert(is_same_v<decay_t<decltype(mod)>, int>);
+template<decltype(auto) mod> requires same_as<decay_t<decltype(mod)>, int>
+struct modint {
 	modint(): x(0) {}
-	template<class T, class=enable_if_t<is_integral_v<T>>> modint(T val): x(val%mod) { if(x<0) x+=mod; }
+	modint(integral auto val): x(val%mod) { if(x<0) x+=mod; }
 	static constexpr int get_mod() { return mod; }
 	#define __op(O, E, F) modint& operator E(const modint &b) { F return *this; } friend modint operator O(modint a, const modint &b) { return a E b; }
 	__op(+, +=,  x+=b.x; if(x>=mod) x-=mod; )
@@ -14,8 +15,7 @@ template<decltype(auto) mod> struct modint { static_assert(is_same_v<decay_t<dec
 		while(a) swap(p, q -= (m / a) * p), swap(a, m %= a);
 		if(m == 1) return q; else return nullopt;
 	}
-	friend bool operator==(const modint &a, const modint &b) { return a.x == b.x; }
-	friend bool operator!=(const modint &a, const modint &b) { return a.x != b.x; }
+	bool operator==(const modint&) const = default;
 	friend ostream& operator<<(ostream &o, const modint &m) { return o<<m.x; }
 	const int& operator*() const { return x; }
 	private: int x;
