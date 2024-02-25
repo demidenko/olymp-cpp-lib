@@ -17,7 +17,7 @@ template<decltype(auto) mod> struct modint { static_assert(is_same_v<decay_t<dec
 	friend bool operator==(const modint &a, const modint &b) { return a.x == b.x; }
 	friend bool operator!=(const modint &a, const modint &b) { return a.x != b.x; }
 	friend ostream& operator<<(ostream &o, const modint &m) { return o<<m.x; }
-	explicit operator int() const { return x; } const int& operator*() const { return x; }
+	const int& operator*() const { return x; }
 	private: int x;
 };
 using mint = modint<(int)998244353>;
