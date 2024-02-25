@@ -6,14 +6,13 @@ void centriod_decomposition(const graph_t<T...> &g, auto &&action) {
 		for(size_t i : g[v]) if(i!=p[v]) q[qn++] = i, p[i] = v;
 	for(size_t i=n-1; i; --i) sub[p[q[i]]] += sub[q[i]];
 	graph_t<T...> tree(n);
-	vector<bool> used(n);
 	function<void(size_t)> go = [&](size_t c) {
 		const size_t sz = sub[c];
 		for(size_t pr = -1; exchange(pr,c) != c; )
-			for(size_t i : g[c]) if(!used[i] && sub[i]*2 > sz)
+			for(size_t i : g[c]) if(sub[i] > sz/2)
 				sub[c] -= sub[i], sub[i] = sz, c = i;
-		used[c] = true;
-		for(auto &e : g[c]) if(size_t i=e; !used[i]) {
+		sub[c] = 0;
+		for(auto &e : g[c]) if(size_t i=e; sub[i]) {
 			go(i);
 			apply([&](auto&&...x){ tree.add_edge(c, x...); }, edge_t<T...>{e});
 		}
