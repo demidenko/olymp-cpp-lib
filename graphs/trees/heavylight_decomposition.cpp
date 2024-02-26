@@ -28,7 +28,7 @@ struct heavy_light_decomposition {
 		size_t z = decompose(x, y, [&](size_t l, size_t r) { (r-1 > m ? sr : sl).emplace_back(l, r); }, ignore_lca);
 		if(tin[x] > tin[y]) sl.swap(sr);
 		for(auto [l, r] : sl) process_range(l, r, true);
-		for(size_t i=size(sr); i--; ) process_range(sr[i].first, sr[i].second, false);
+		for(auto [l, r] : views::reverse(sr)) process_range(l, r, false);
 		return z;
 	}
 	
