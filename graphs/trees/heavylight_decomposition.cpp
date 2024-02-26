@@ -49,8 +49,7 @@ struct heavy_light_decomposition {
 	void build(const auto &g, size_t v, size_t f, size_t &tn) {
 		tin[v] = tn++;
 		size_t mx = exchange(header[v], f);
-		if(mx == -1) return ;
-		build(g, mx, f, tn);
+		if(mx != -1) build(g, mx, f, tn);
 		for(size_t i : g[v]) if(i!=par[v] && i!=mx) build(g, i, i, tn);
 	}
 };
