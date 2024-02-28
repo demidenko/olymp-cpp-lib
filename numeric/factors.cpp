@@ -1,52 +1,50 @@
 using uint128_t = __uint128_t;
 template<class T> using square_t = conditional_t<sizeof(T) < sizeof(uint64_t), uint64_t, uint128_t>;
 
-template<uint32_t... A, class T>
+template<uint32_t... A, std::unsigned_integral T>
 bool miller_rabin(T n) {
 	assert(n > 1 && n % 2 == 1);
-	auto test = [n](uint32_t s, square_t<T> a) {
+	auto test = [n, z=std::countr_zero(n-1)](square_t<T> a) {
 		square_t<T> r = 1; 
-		for(T d = n>>s; d; d>>=1, a = a*a %n) if(d&1) r = r*a %n;
+		for(T d = n>>z; d; d>>=1, a = a*a %n) if(d&1) r = r*a %n;
 		if(r == 1) return true;
-		for(; s--; r = r*r %n) if(r == n-1) return true;
+		for(uint32_t s=z; s--; r = r*r %n) if(r == n-1) return true;
 		return false;
 	};
-	uint32_t s = 1;
-	while(~n >> s &1) ++s;
-	return ((A >= n || test(s, A)) && ...);
+	return ((A >= n || test(A)) && ...);
 }
 
-template<class T>
-auto is_prime(T n) -> enable_if_t<is_integral_v<T>, bool> {
+template<std::integral T>
+bool is_prime(T n) {
 	if(n < 2 || n % 2 == 0) return n == 2;
 	if constexpr (is_signed_v<T>) return is_prime<make_unsigned_t<T>>(n);
-	if constexpr (sizeof(T) > sizeof(uint32_t)) {
+	else if constexpr (sizeof(T) > sizeof(uint32_t)) {
 		if(n <= numeric_limits<uint32_t>::max()) return is_prime<uint32_t>(n);
 		return miller_rabin<2, 325, 9375, 28178, 450775, 9780504, 1795265022>(n);
 	} else return miller_rabin<2, 7, 61>(n);
 }
 
-template<class T>
-auto pollard(T n, auto &res) -> enable_if_t<is_integral_v<T>, void> {
+template<std::integral T>
+void pollard(T n, auto &p) {
 	assert(n > 0 && n % 2 == 1);
-	if constexpr (is_signed_v<T>) return pollard<make_unsigned_t<T>>(n, res);
+	if constexpr (is_signed_v<T>) return pollard<make_unsigned_t<T>>(n, p);
 	if constexpr (sizeof(T) > sizeof(uint32_t)) {
-		if(n <= numeric_limits<uint32_t>::max()) return pollard<uint32_t>(n, res);
+		if(n <= numeric_limits<uint32_t>::max()) return pollard<uint32_t>(n, p);
 	}
 	
 	if(n == 1) return ;
-	if(is_prime(n)) { res.push_back(n); return ; }
+	if(is_prime(n)) { p.push_back(n); return ; }
 	
 	static mt19937_64 rnd(chrono::steady_clock::now().time_since_epoch().count());
 	for(;;) {
 		auto &&g = [n, a=rnd()%(n-1)+1](square_t<T> x) { return (x*x + a) %n; };
 		for(T x = rnd()%(n-3)+3, y = g(x); x != y; x=g(x), y=g(g(y)))
-		if(const T d = gcd(x<y ? y-x : x-y, n); d > 1)
-			return pollard<T>(d, res), pollard<T>(n / d, res);
+		if(const T d = std::gcd(x<y ? y-x : x-y, n); d > 1)
+			return pollard<T>(d, p), pollard<T>(n / d, p);
 	}
 }
 
-template<class T>
+template<std::integral T>
 vector<T> factors(T n) {
 	assert(n > 0);
 	vector<T> f;
