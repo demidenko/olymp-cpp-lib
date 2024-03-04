@@ -1,5 +1,5 @@
 using uint128_t = __uint128_t;
-template<class T> using square_t = conditional_t<sizeof(T) < sizeof(uint64_t), uint64_t, uint128_t>;
+template<unsigned_integral T> using square_t = conditional_t<sizeof(T) < sizeof(uint64_t), uint64_t, uint128_t>;
 
 template<uint32_t... A, std::unsigned_integral T>
 bool __miller_rabin(T n) {
@@ -24,10 +24,9 @@ bool is_prime(T n) {
 	} else return __miller_rabin<2, 7, 61>(n);
 }
 
-template<std::integral T>
+template<std::unsigned_integral T>
 void __get_factors(T n, auto &p) {
 	assert(n > 0 && n % 2 == 1);
-	if constexpr (is_signed_v<T>) return __get_factors<make_unsigned_t<T>>(n, p);
 	if constexpr (sizeof(T) > sizeof(uint32_t)) {
 		if(n <= numeric_limits<uint32_t>::max()) return __get_factors<uint32_t>(n, p);
 	}
@@ -51,6 +50,6 @@ vector<T> factors(T n) {
 	while(n%2 == 0) n/=2, f.push_back(2);
 	for(T p = 3; p <= 37 && p*p <= n; p += 2) 
 		while(n%p == 0) n/=p, f.push_back(p);
-	__get_factors(n, f);
+	__get_factors<make_unsigned_t<T>>(n, f);
 	return f;
 }
