@@ -19,7 +19,7 @@ bool is_prime(T n) {
 	if(n < 2 || n % 2 == 0) return n == 2;
 	if constexpr (is_signed_v<T>) return is_prime<make_unsigned_t<T>>(n);
 	else if constexpr (sizeof(T) > sizeof(uint32_t)) {
-		if(n <= numeric_limits<uint32_t>::max()) return is_prime<uint32_t>(n);
+		if(std::in_range<uint32_t>(n)) return is_prime<uint32_t>(n);
 		return __miller_rabin<2, 325, 9375, 28178, 450775, 9780504, 1795265022>(n);
 	} else return __miller_rabin<2, 7, 61>(n);
 }
@@ -28,7 +28,7 @@ template<std::unsigned_integral T>
 void __get_factors(T n, auto &p) {
 	assert(n > 0 && n % 2 == 1);
 	if constexpr (sizeof(T) > sizeof(uint32_t)) {
-		if(n <= numeric_limits<uint32_t>::max()) return __get_factors<uint32_t>(n, p);
+		if(std::in_range<uint32_t>(n)) return __get_factors<uint32_t>(n, p);
 	}
 	
 	if(n == 1) return ;
