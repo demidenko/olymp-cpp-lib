@@ -26,14 +26,12 @@ bool is_prime(T n) {
 
 template<std::unsigned_integral T>
 void __get_factors(T n, auto &p) {
-	assert(n > 0 && n % 2 == 1);
+	if(n == 1) return ;
+	assert(n > 1 && n % 2 == 1);
 	if constexpr (sizeof(T) > sizeof(uint32_t)) {
 		if(std::in_range<uint32_t>(n)) return __get_factors<uint32_t>(n, p);
 	}
-	
-	if(n == 1) return ;
 	if(is_prime(n)) { p.push_back(n); return ; }
-	
 	static mt19937_64 rnd(chrono::steady_clock::now().time_since_epoch().count());
 	for(;;) {
 		auto &&g = [n, a=rnd()%(n-1)+1](square_t<T> x) { return (x*x + a) %n; };
