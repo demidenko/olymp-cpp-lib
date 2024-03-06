@@ -1,5 +1,5 @@
 template<std::signed_integral index_t, class T>
-vector<index_t> __nearest(const vector<T> &v, auto &&cmp, int dir) {
+vector<index_t> __nearest(const vector<T> &v, auto &&cmp, index_t dir) {
 	vector<index_t> f(size(v));
 	const index_t n = ssize(v), out = dir < 0 ? -1 : n;
 	for(index_t i = out-dir, k = 0; k < n; ++k, i-=dir)
