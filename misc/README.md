@@ -1,8 +1,8 @@
 # Nearest
 ```c++
 vector<int> a;
-auto next_less = nearest<less, 1>(a);
-auto prev_greater_or_equal = nearest<greater_equal, -1>(a);
+auto next_less = nearest<1>(a, less{});
+auto prev_greater_or_equal = nearest<-1>(a, greater_equal{});
 ```
 
 # Parallel Binary Search
