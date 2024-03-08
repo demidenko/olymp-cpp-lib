@@ -1,7 +1,7 @@
 template<class T, bool fit_memory = true>
 struct aggregator {
-	explicit aggregator(size_t n = 0): d(tree_size(n)), t(d*2) {}
-	aggregator(size_t n, auto gen): aggregator(n) {
+	explicit aggregator(size_t n = 0): d(fit_memory?n:std::bit_ceil(n)), t(d*2) {}
+	aggregator(size_t n, auto &&gen): aggregator(n) {
 		for(size_t i=0; i<n; ++i) t[i+d] = gen(i);
 		for(size_t i=d; i-->1;) t[i] = T(t[i*2], t[i*2+1]);
 	}
@@ -27,7 +27,6 @@ struct aggregator {
 	private:
 	size_t d;
 	vector<T> t;
-	static size_t tree_size(size_t n) { return fit_memory ? n : (n>1 ? tree_size((n+1)/2)*2 : 1); }
 };
 /* implement:
 	struct node {
