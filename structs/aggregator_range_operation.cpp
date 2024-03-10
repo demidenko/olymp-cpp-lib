@@ -4,7 +4,7 @@ struct aggregator {
 	aggregator(size_t n, auto &&gen): aggregator(n) { if(n) build(0, d, n=1, gen); }
 	
 	void apply(size_t l, size_t r, const O &operation) {
-		if(r > d) r = d;
+		assert(l <= r);
 		if(l < r) apply(l, r, operation, 0, d, 1);
 	}
 	
@@ -14,7 +14,7 @@ struct aggregator {
 	}
 	
 	T operator()(size_t l, size_t r) const {
-		if(r > d) r = d;
+		assert(l <= r);
 		return l < r ? query(l, r, 0, d, 1) : T{};
 	}
 	
