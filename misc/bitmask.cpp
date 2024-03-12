@@ -1,4 +1,4 @@
-template<class T> struct mask_t {
+template<std::unsigned_integral T> struct mask_t {
 	explicit mask_t(T ms = 0): ms(ms) {}
 	static mask_t ones(size_t n) { return mask_t((T(1) << n) - 1); }
 	static mask_t ones(size_t l, size_t r) { return ones(r) ^ ones(l); }
@@ -10,8 +10,7 @@ template<class T> struct mask_t {
 	mask_op(|, |=, ms |= b.ms; )
 	mask_op(^, ^=, ms ^= b.ms; )
 	
-	friend bool operator==(const mask_t &a, const mask_t &b) { return a.ms == b.ms; }
-	friend bool operator!=(const mask_t &a, const mask_t &b) { return a.ms != b.ms; }
+	friend bool operator==(const mask_t &a, const mask_t &b) = default;
 	
 	operator T() const { return ms; }
 	
@@ -38,8 +37,8 @@ template<class T> struct mask_t {
 	};
 	
 	submask_iterator begin() const { return {ms, ms}; }
-	submask_iterator end() const { return {ms, -1}; }
+	submask_iterator end() const { return {ms, ~T(0)}; }
 	
 	private: T ms;
 };
-using mask = mask_t<int64_t>;
+using mask = mask_t<uint32_t>;
