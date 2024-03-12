@@ -3,10 +3,11 @@ struct binary_lifter {
 	
 	binary_lifter(): binary_lifter(0) {}
 	
-	binary_lifter(const vector<size_t> &p): binary_lifter(size(p)) {
+	binary_lifter(const std::ranges::sized_range auto &p): binary_lifter(size(p)) {
 		const size_t n = size(p);
-		for(size_t i=0; i<n; ++i) assert(p[i]==none || (0<=p[i] && p[i]<n && p[i]!=i)); //weak check
-		jump[0] = p;
+		std::ranges::copy(p, begin(jump[0]));
+		for(size_t t : jump[0]) assert(t == none || t < n);
+		//TODO: support functional graphs, not trees only
 		for(size_t h=1; h<L; ++h)
 		for(size_t i=0; i<n; ++i)
 			if(size_t j=jump[h-1][i]; j!=none) jump[h][i] = jump[h-1][j];
