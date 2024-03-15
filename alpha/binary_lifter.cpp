@@ -19,15 +19,15 @@ struct binary_lifter {
 				v = p[v];
 				if(used[v] <= i) {
 					if(used[v] == i) {
-						auto it = find(begin(path), end(path), v);
-						cycs.emplace_back(size(vs), end(path) - it);
-						for(size_t pos = 0; it != end(path); ++it, ++pos) {
+						const auto itv = find(begin(path), end(path), v);
+						cycs.emplace_back(size(vs), end(path) - itv);
+						for(auto it = itv; it != end(path); ++it) {
 							size_t x = *it;
 							vs.push_back(x);
 							first_cyc_v[x] = x;
-							cyc_pos[x] = {size(cycs) - 1, pos};
+							cyc_pos[x] = {size(cycs) - 1, it - itv};
 						}
-						path.erase(it, end(path));
+						path.erase(itv, end(path));
 					}
 					break ;
 				}
