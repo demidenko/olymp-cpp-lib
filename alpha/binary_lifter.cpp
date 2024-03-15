@@ -9,6 +9,7 @@ struct binary_lifter {
 		jumps_to_cyc.assign(n, 0);
 		first_cyc_v.resize(n);
 		cyc_pos.resize(n);
+		vs.reserve(n);
 		vector<size_t> used(n, n);
 		for(size_t i=0; i<n; ++i) if(used[i] == n) {
 			vector<size_t> path;
@@ -19,9 +20,10 @@ struct binary_lifter {
 				if(used[v] <= i) {
 					if(used[v] == i) {
 						auto it = find(begin(path), end(path), v);
-						auto &cyc = cycs.emplace_back(it, end(path));
-						for(size_t pos=0; pos<size(cyc); ++pos) {
-							size_t x = cyc[pos];
+						cycs.emplace_back(size(vs), end(path) - it);
+						for(size_t pos = 0; it != end(path); ++it, ++pos) {
+							size_t x = *it;
+							vs.push_back(x);
 							first_cyc_v[x] = x;
 							cyc_pos[x] = {size(cycs) - 1, pos};
 						}
@@ -51,9 +53,9 @@ struct binary_lifter {
 			for(size_t h=0; k>0; ++h, k>>=1) if(k&1) i = jump[h][i];
 			return i;
 		} else {
-			auto [row, pos] = cyc_pos[first_cyc_v[i]];
-			auto &cyc = cycs[row];
-			return cyc[(pos + (k - d)) % size(cyc)];
+			auto [ck, pos] = cyc_pos[first_cyc_v[i]];
+			auto [cl, clen] = cycs[ck];
+			return vs[cl + (pos + (k - d)) % clen];
 		}
 	}
 	
@@ -70,8 +72,8 @@ struct binary_lifter {
 	}*/
 	
 	private:
+	vector<size_t> vs;
 	vector<vector<size_t>> jump;
-	vector<vector<size_t>> cycs;
-	vector<pair<size_t,size_t>> cyc_pos;
+	vector<pair<size_t,size_t>> cycs, cyc_pos;
 	vector<size_t> jumps_to_cyc, first_cyc_v;
 };
