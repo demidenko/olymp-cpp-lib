@@ -1,5 +1,5 @@
-struct binary_lifter {
-	binary_lifter(const std::ranges::sized_range auto &f = std::ranges::empty_view<size_t>{}) {
+struct func_graph {
+	func_graph(const std::ranges::sized_range auto &f = std::ranges::empty_view<size_t>{}) {
 		const size_t n = size(f);
 		if(n == 0) return ;
 		
