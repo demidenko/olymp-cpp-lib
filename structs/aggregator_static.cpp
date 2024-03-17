@@ -1,8 +1,8 @@
 template<class T>
 struct aggregator_static {
-	aggregator_static(const auto &vals): t(empty(vals) ? 1 : std::bit_width(size(vals))) {
-		t[0].assign(begin(vals), end(vals));
+	aggregator_static(size_t n, auto &&gen): t(n ? std::bit_width(n) : 1) {
 		t[0].resize(size_t(1) << size(t));
+		for(size_t i=0; i<n; ++i) t[0][i] = gen(i);
 		for(size_t p=4, k=1; k<size(t); ++k, p<<=1) {
 			auto &a = t[k] = t[0];
 			for(size_t l=0; l<size(a); l+=p) {
