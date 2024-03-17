@@ -12,7 +12,9 @@ struct func_graph {
 		size_t gn = 0, g_none = -1;
 		vector<size_t> g_id(n), g_par(n);
 		
-		cyc_pos.assign(n, {-1, -1});
+		jump.resize(n);
+		jump_len.resize(n);
+		on_cyc.assign(n, false);
 		vector<size_t> used(n, n);
 		for(size_t i=0; i<n; ++i) if(used[i] == n) {
 			vector<size_t> path;
@@ -23,11 +25,12 @@ struct func_graph {
 				if(used[v] <= i) {
 					if(used[v] == i) {
 						const auto itv = find(begin(path), end(path), v);
-						cycs.emplace_back(vn, end(path) - itv);
 						for(auto it = itv; it != end(path); ++it) {
 							size_t x = *it;
 							vs[vn++] = x;
-							cyc_pos[x] = {size(cycs) - 1, it - itv};
+							jump[x] = v;
+							jump_len[x] = end(path) - it;
+							on_cyc[x] = true;
 						}
 						path.erase(itv, end(path));
 					}
@@ -37,20 +40,17 @@ struct func_graph {
 			}
 			for(size_t x : std::views::reverse(path)) {
 				g_id[x] = gn++;
-				g_par[g_id[x]] = on_cyc(p[x]) ? g_none : g_id[p[x]];
+				g_par[g_id[x]] = on_cyc[p[x]] ? g_none : g_id[p[x]];
 			}
 		}
 		
-		assert(vn + gn == n);
 		vector<vector<size_t>> g(gn + 1);
 		std::ranges::replace(g_par, g_none, gn);
 		for(size_t i=0; i<gn; ++i) g[g_par[i]].push_back(i);
 		heavy_light_decomposition hld(g, gn);
-		for(size_t i=0; i<n; ++i) if(!on_cyc(i)) vs[n - hld.index(g_id[i])] = i;
+		for(size_t i=0; i<n; ++i) if(!on_cyc[i]) vs[n - hld.index(g_id[i])] = i;
 		vs_pos.resize(n);
 		for(size_t i=0; i<n; ++i) vs_pos[vs[i]] = i;
-		jump.resize(n);
-		jump_len.resize(n);
 		for(size_t i=n-1; i>=vn; --i) {
 			size_t v = vs[i];
 			if(vs_pos[p[v]] == i + 1) {
@@ -67,18 +67,11 @@ struct func_graph {
 	
 	auto decompose(size_t v) const {
 		vector<tuple<size_t,size_t,bool>> res;
-		for(;;) {
+		for(;; v = jump[v]) {
 			size_t l = index(v);
-			if(on_cyc(v)) {
-				auto [ck, pos] = cyc_pos[v];
-				auto [cl, clen] = cycs[ck];
-				res.emplace_back(l, cl + clen, pos == 0);
-				if(pos == 0) return res;
-				v = vs[cl];
-			} else {
-				res.emplace_back(l, l + jump_len[v], false);
-				v = jump[v];
-			}
+			bool last = on_cyc[v] && v == jump[v];
+			res.emplace_back(l, l + jump_len[v], last);
+			if(last) return res;
 		}
 	}
 	
@@ -93,7 +86,6 @@ struct func_graph {
 	
 	private:
 	vector<size_t> vs, vs_pos;
-	vector<pair<size_t,size_t>> cycs, cyc_pos;
 	vector<size_t> jump, jump_len;
-	bool on_cyc(size_t v) const { return cyc_pos[v].first != -1; }
+	vector<bool> on_cyc;
 };
