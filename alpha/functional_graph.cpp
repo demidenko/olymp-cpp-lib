@@ -63,15 +63,27 @@ struct func_graph {
 	size_t index(size_t v) const { return vs_pos[v]; }
 	
 	auto decompose(size_t v) const {
-		vector<tuple<size_t,size_t,bool>> res;
-		for(;; v = jump[v]) {
-			size_t l = index(v);
-			bool last = v == jump[v];
-			res.emplace_back(l, l + jump_len[v], last);
-			if(last) return res;
-		}
+		struct path_range {
+			const func_graph &fg;
+			size_t v;
+			path_iterator begin() const { return {fg, v}; }
+			path_iterator end() const { return {fg, size_t(-1)}; }
+		};
+		return path_range{*this, v};
 	}
 	
 	private:
 	vector<size_t> vs_pos, jump, jump_len;
+	
+	struct path_iterator {
+		const func_graph &fg;
+		size_t v;
+		void operator++() { if(size_t t = fg.jump[v]; t == v) v = -1; else v = t; }
+		bool operator!=(const path_iterator &it) const { return v != it.v; }
+		tuple<size_t,size_t,bool> operator*() const {
+			size_t l = fg.index(v);
+			bool last = v == fg.jump[v];
+			return {l, l + fg.jump_len[v], last};
+		}
+	};
 };
