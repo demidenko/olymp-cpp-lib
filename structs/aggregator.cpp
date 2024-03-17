@@ -1,6 +1,6 @@
-template<class T, bool fit_memory = true>
+template<class T>
 struct aggregator {
-	explicit aggregator(size_t n = 0): d(fit_memory?n:std::bit_ceil(n)), t(d*2) {}
+	explicit aggregator(size_t n = 0): d(n), t(d*2) {}
 	aggregator(size_t n, auto &&gen): aggregator(n) {
 		for(size_t i=0; i<n; ++i) t[i+d] = gen(i);
 		for(size_t i=d; i-->1;) t[i] = T(t[i*2], t[i*2+1]);
@@ -19,10 +19,7 @@ struct aggregator {
 		return T(fl, fr);
 	}
 	
-	decltype(auto) operator()() const {
-		if constexpr (!fit_memory) return t[1];
-		else return operator()(0, d);
-	}
+	T operator()() const { return operator()(0, d); }
 	
 	private:
 	size_t d;
