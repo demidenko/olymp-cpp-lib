@@ -12,9 +12,7 @@ struct func_graph {
 		size_t gn = 0, g_none = -1;
 		vector<size_t> g_id(n), g_par(n);
 		
-		jumps_to_cyc.assign(n, 0);
-		first_cyc_v.resize(n);
-		cyc_pos.resize(n);
+		cyc_pos.assign(n, {-1, -1});
 		vector<size_t> used(n, n);
 		for(size_t i=0; i<n; ++i) if(used[i] == n) {
 			vector<size_t> path;
@@ -29,7 +27,6 @@ struct func_graph {
 						for(auto it = itv; it != end(path); ++it) {
 							size_t x = *it;
 							vs[vn++] = x;
-							first_cyc_v[x] = x;
 							cyc_pos[x] = {size(cycs) - 1, it - itv};
 						}
 						path.erase(itv, end(path));
@@ -39,10 +36,8 @@ struct func_graph {
 				used[v] = i;
 			}
 			for(size_t x : std::views::reverse(path)) {
-				first_cyc_v[x] = first_cyc_v[p[x]];
-				jumps_to_cyc[x] = jumps_to_cyc[p[x]] + 1;
 				g_id[x] = gn++;
-				g_par[g_id[x]] = jumps_to_cyc[p[x]] == 0 ? g_none : g_id[p[x]];
+				g_par[g_id[x]] = on_cyc(p[x]) ? g_none : g_id[p[x]];
 			}
 		}
 		
@@ -51,38 +46,56 @@ struct func_graph {
 		std::ranges::replace(g_par, g_none, gn);
 		for(size_t i=0; i<gn; ++i) g[g_par[i]].push_back(i);
 		heavy_light_decomposition hld(g, gn);
-		for(size_t i=0; i<n; ++i) if(jumps_to_cyc[i] > 0) vs[n - hld.index(g_id[i])] = i;
+		for(size_t i=0; i<n; ++i) if(!on_cyc(i)) vs[n - hld.index(g_id[i])] = i;
 		vs_pos.resize(n);
 		for(size_t i=0; i<n; ++i) vs_pos[vs[i]] = i;
 		jump.resize(n);
+		jump_len.resize(n);
 		for(size_t i=n-1; i>=vn; --i) {
 			size_t v = vs[i];
-			if(vs_pos[p[v]] == i + 1) jump[v] = jump[p[v]];
-			else jump[v] = p[v];
+			if(vs_pos[p[v]] == i + 1) {
+				jump[v] = jump[p[v]];
+				jump_len[v] = jump_len[p[v]] + 1;
+			} else {
+				jump[v] = p[v];
+				jump_len[v] = 1;
+			}
 		}
 	}
 	
 	size_t index(size_t v) const { return vs_pos[v]; }
 	
-	size_t kth_jump(size_t i, std::unsigned_integral auto k) const {
-		if(size_t d = jumps_to_cyc[i]; k < d) {
-			for(;;) {
-				size_t j = jump[i];
-				size_t len = jumps_to_cyc[i] - jumps_to_cyc[j];
-				if(k < len) return vs[vs_pos[i] + k];
-				k -= len;
-				i = j;
+	auto decompose(size_t v) const {
+		vector<pair<size_t,size_t>> res;
+		for(;;) {
+			if(on_cyc(v)) {
+				auto [ck, pos] = cyc_pos[v];
+				auto [cl, clen] = cycs[ck];
+				res.emplace_back(cl + pos, cl + clen);
+				if(pos == 0) return res;
+				v = vs[cl];
+			} else {
+				res.emplace_back(vs_pos[v], vs_pos[v] + jump_len[v]);
+				v = jump[v];
 			}
-		} else {
-			auto [ck, pos] = cyc_pos[first_cyc_v[i]];
-			auto [cl, clen] = cycs[ck];
-			return vs[cl + (pos + (k - d)) % clen];
 		}
+	}
+	
+	size_t kth_jump(size_t i, std::unsigned_integral auto k) const {
+		auto ranges = decompose(i);
+		for(size_t p=0; p<size(ranges)-1; ++p) {
+			auto [l, r] = ranges[p];
+			if(r - l > k) return vs[l + k];
+			k -= r - l;
+		}
+		auto [l, r] = ranges.back();
+		k %= r - l;
+		return vs[l + k];
 	}
 	
 	private:
 	vector<size_t> vs, vs_pos;
 	vector<pair<size_t,size_t>> cycs, cyc_pos;
-	vector<size_t> jumps_to_cyc, first_cyc_v;
-	vector<size_t> jump;
+	vector<size_t> jump, jump_len;
+	bool on_cyc(size_t v) const { return cyc_pos[v].first != -1; }
 };
