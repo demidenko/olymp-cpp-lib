@@ -66,31 +66,29 @@ struct func_graph {
 	size_t index(size_t v) const { return vs_pos[v]; }
 	
 	auto decompose(size_t v) const {
-		vector<pair<size_t,size_t>> res;
+		vector<tuple<size_t,size_t,bool>> res;
 		for(;;) {
+			size_t l = index(v);
 			if(on_cyc(v)) {
 				auto [ck, pos] = cyc_pos[v];
 				auto [cl, clen] = cycs[ck];
-				res.emplace_back(cl + pos, cl + clen);
+				res.emplace_back(l, cl + clen, pos == 0);
 				if(pos == 0) return res;
 				v = vs[cl];
 			} else {
-				res.emplace_back(vs_pos[v], vs_pos[v] + jump_len[v]);
+				res.emplace_back(l, l + jump_len[v], false);
 				v = jump[v];
 			}
 		}
 	}
 	
 	size_t kth_jump(size_t i, std::unsigned_integral auto k) const {
-		auto ranges = decompose(i);
-		for(size_t p=0; p<size(ranges)-1; ++p) {
-			auto [l, r] = ranges[p];
-			if(r - l > k) return vs[l + k];
+		for(auto [l, r, last] : decompose(i)) {
+			if(last) k %= r - l;
+			if(r - l > k) { i = vs[l + k]; break; }
 			k -= r - l;
 		}
-		auto [l, r] = ranges.back();
-		k %= r - l;
-		return vs[l + k];
+		return i;
 	}
 	
 	private:
