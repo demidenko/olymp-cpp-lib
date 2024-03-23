@@ -71,7 +71,9 @@ struct aggregator {
 	
 	T build(size_t l, size_t r, size_t &vn, auto &&gen) {
 		size_t v = vn++, m = std::midpoint(l, r);
-		return t[v].first = l+1 == r ? gen(l) : T(build(l, m, vn, gen), build(m, r, vn, gen));
+		if(l+1 == r) return t[v].first = gen(l);
+		T tl = build(l, m, vn, gen), tr = build(m, r, vn, gen);
+		return t[v].first = T(tl, tr);
 	}
 };
 /* implement:
