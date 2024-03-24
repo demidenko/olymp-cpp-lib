@@ -24,8 +24,8 @@ struct heavy_light_decomposition {
 	
 	size_t decompose_ordered(size_t x, size_t y, auto &&process_range, bool exclude_lca = false) const {
 		vector<pair<size_t,size_t>> sl, sr;
-		const size_t m = min(tin[x], tin[y]);
-		size_t z = decompose(x, y, [&](size_t l, size_t r) { (r-1 > m ? sr : sl).emplace_back(l, r); }, exclude_lca);
+		auto f = [&, m = min(tin[x], tin[y])](size_t l, size_t r) { (r-1 > m ? sr : sl).emplace_back(l, r); };
+		size_t z = decompose(x, y, f, exclude_lca);
 		if(tin[x] > tin[y]) sl.swap(sr);
 		for(auto [l, r] : sl) process_range(l, r, true);
 		for(auto [l, r] : views::reverse(sr)) process_range(l, r, false);
