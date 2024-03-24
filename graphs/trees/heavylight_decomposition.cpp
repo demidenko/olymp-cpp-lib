@@ -1,9 +1,8 @@
-template<bool heavy_by_size = true>
 struct heavy_light_decomposition {
-	heavy_light_decomposition(const auto &g, size_t root = 0):
+	heavy_light_decomposition(const auto &g, size_t root = 0, bool use_longest_path = false):
 		par(size(g),-1), header(size(g),-1), tin(size(g))
 	{
-		calc(g, root);
+		calc(g, root, use_longest_path);
 		size_t tn = 0;
 		build(g, root, root, tn);
 		assert(tn == size(g));
@@ -34,16 +33,15 @@ struct heavy_light_decomposition {
 	
 	private: vector<size_t> par, header, tin;
 	
-	size_t calc(const auto &g, size_t v) {
+	size_t calc(const auto &g, size_t v, bool use_longest_path) {
 		size_t mx = 0, sz = 1;
 		for(size_t i : g[v]) if(i!=par[v]) {
 			par[i] = v;
-			size_t x = calc(g, i);
+			size_t x = calc(g, i, use_longest_path);
 			if(x > mx) mx = x, header[v] = i;
-			if constexpr (heavy_by_size) sz += x;
+			sz += x;
 		}
-		if constexpr (heavy_by_size) return sz;
-		else return mx + 1;
+		return use_longest_path ? mx + 1 : sz;
 	}
 	
 	void build(const auto &g, size_t v, size_t f, size_t &tn) {

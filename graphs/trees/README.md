@@ -71,7 +71,7 @@ To find lowest common ancestor in $O(\log n)$ use `c = hld.lca(a, b)`.
 But as bonus both `decompose` and `decompose_ordered` returns LCA too.
 
 ### Decomposition by height
-`heavy_light_decomposition<false>` builds Longest-path decomposition (i.e. heavy edge going to subtree with maximum height). 
+`heavy_light_decomposition(g, root, true)` builds Longest-path decomposition (i.e. heavy edge going to subtree with maximum height). 
 Convinient for linear time DP on tree. 
 Methods `decompose`/`lca` works correct but in $O(\sqrt n)$ on [worst case](https://codeforces.com/blog/entry/75410).
 
