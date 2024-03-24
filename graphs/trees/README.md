@@ -60,7 +60,7 @@ hld.decompose_ordered(a, b, [&](size_t l, size_t r, bool reversed) {
 });
 ```
 
-To exclude LCA(a,b) from decomposition pass `ignore_lca = true` as last parameter
+To exclude LCA(a,b) from decomposition pass `exclude_lca = true` as last parameter
 ```c++
 hld.decompose(a, b, [&](size_t l, size_t r) { ... }, true);
 ```
