@@ -3,7 +3,7 @@ struct rsq_range_assign {
 	explicit rsq_range_assign(size_t sz = 0): d(std::bit_ceil(sz)), t(d*2) {}
 	
 	rsq_range_assign(const std::ranges::range auto &vals): rsq_range_assign(size(vals)) {
-		for(auto it=begin(t)+d; auto &val : vals) it++->first = val;
+		for(auto it=begin(t)+d; auto &&val : vals) it++->first = val;
 		for(size_t i=d; i-->1; ) t[i].first = t[i*2].first + t[i*2+1].first;
 	}
 	
