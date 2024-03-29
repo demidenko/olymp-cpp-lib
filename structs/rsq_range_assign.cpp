@@ -12,9 +12,7 @@ struct rsq_range_assign {
 	}
 	
 	T operator()(size_t l, size_t r) const {
-		T buf{};
-		if(l < r) calc(l, r, 0, d, 1, buf);
-		return buf;
+		return l < r ? sum(l, r, 0, d, 1) : T{};
 	}
 	
 	private:
@@ -38,12 +36,11 @@ struct rsq_range_assign {
 		t[v].first = t[v*2].first + t[v*2+1].first;
 	}
 	
-	void calc(size_t i, size_t j, size_t l, size_t r, size_t v, T &buf) const {
-		if(i == l && j == r) buf += t[v].first; else
-		if(auto a = t[v].second) buf += T(j-i) * *a; else {
-			size_t m = (l+r)>>1;
-			if(i < m) calc(i, min(j,m), l, m, v*2, buf);
-			if(m < j) calc(max(i,m), j, m, r, v*2+1, buf);
-		}
+	T sum(size_t i, size_t j, size_t l, size_t r, size_t v) const {
+		if(i == l && j == r) return t[v].first;
+		if(auto a = t[v].second) return T(j-i) * *a; 
+		if(size_t m = (l+r)>>1; j <= m) return sum(i, j, l, m, v*2);
+		else if(i >= m) return sum(i, j, m, r, v*2+1);
+		else return sum(i, m, l, m, v*2) + sum(m, j, m, r, v*2+1);
 	}
 };
