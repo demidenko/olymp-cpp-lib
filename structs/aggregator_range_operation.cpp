@@ -72,3 +72,14 @@ struct aggregator {
 		return t[v].first = T(build(l, m, v+1, gen), build(m, r, vr, gen));
 	}
 };
+/*
+struct operation {
+	operation(const operation &op1, const operation &op2)
+	decltype(auto) slice(size_t start, size_t end) const { return *this; }
+};
+struct node {
+	node()
+	node(const node &vl, const node &vr)
+	void apply(const operation &op, size_t length)
+};
+*/
