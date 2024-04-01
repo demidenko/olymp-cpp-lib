@@ -4,18 +4,15 @@ struct aggregator {
 	aggregator(size_t n, auto &&gen): aggregator(n) { if(n) build(0, d, n=1, gen); }
 	
 	void apply(size_t l, size_t r, const O &operation) {
-		assert(l <= r);
 		if(l < r) apply(l, r, operation, 0, d, 1);
 	}
 	
 	void set_value(size_t i, const T &value) {
-		assert(i < d);
 		set_value(i, value, 0, d, 1);
 	}
 	
 	T operator()(size_t l, size_t r) const {
-		assert(l <= r);
-		return l < r ? query(l, r, 0, d, 1) : T{};
+		return l < r ? calc(l, r, 0, d, 1) : T{};
 	}
 	
 	const T& operator()() const { return t[1].first; }
@@ -60,13 +57,13 @@ struct aggregator {
 		t[v].first = T(t[v+1].first, t[vr].first);
 	}
 	
-	T query(size_t i, size_t j, size_t l, size_t r, size_t v) const {
+	T calc(size_t i, size_t j, size_t l, size_t r, size_t v) const {
 		if(i == l && j == r) return t[v].first;
 		push(v, r-l);
 		size_t m = (l+r) >> 1, vr = v + (m-l)*2;
-		if(j <= m) return query(i, j, l, m, v+1);
-		if(i >= m) return query(i, j, m, r, vr);
-		return T(query(i,m,l,m,v+1), query(m,j,m,r,vr));
+		if(j <= m) return calc(i, j, l, m, v+1);
+		if(i >= m) return calc(i, j, m, r, vr);
+		return T(calc(i, m, l, m, v+1), calc(m, j, m, r, vr));
 	}
 	
 	T build(size_t l, size_t r, size_t &vn, auto &&gen) {
@@ -76,14 +73,3 @@ struct aggregator {
 		return t[v].first = T(tl, tr);
 	}
 };
-/* implement:
-	struct operation {
-		operation(const operation &op1, const operation &op2)
-		decltype(auto) slice(size_t start, size_t end) const { return *this; }
-	};
-	struct node {
-		node()
-		node(const node &vl, const node &vr)
-		void apply(const operation &op, size_t length)
-	};
-*/
