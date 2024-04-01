@@ -1,7 +1,7 @@
 template<class T, class O>
 struct aggregator {
 	explicit aggregator(size_t n = 0): d(n), t(d*2) {}
-	aggregator(size_t n, auto &&gen): aggregator(n) { if(n) build(0, d, n=1, gen); }
+	aggregator(size_t n, auto &&gen): aggregator(n) { if(n) build(0, d, 1, gen); }
 	
 	void apply(size_t l, size_t r, const O &operation) {
 		if(l < r) apply(l, r, operation, 0, d, 1);
@@ -66,10 +66,9 @@ struct aggregator {
 		return T(calc(i, m, l, m, v+1), calc(m, j, m, r, vr));
 	}
 	
-	T build(size_t l, size_t r, size_t &vn, auto &&gen) {
-		size_t v = vn++, m = std::midpoint(l, r);
+	T& build(size_t l, size_t r, size_t v, auto &&gen) {
 		if(l+1 == r) return t[v].first = gen(l);
-		T tl = build(l, m, vn, gen), tr = build(m, r, vn, gen);
-		return t[v].first = T(tl, tr);
+		size_t m = (l+r) >> 1, vr = v + (m-l)*2;
+		return t[v].first = T(build(l, m, v+1, gen), build(m, r, vr, gen));
 	}
 };
