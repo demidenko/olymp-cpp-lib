@@ -1,10 +1,9 @@
-template<class T> pair<T, T> fib_pair(uint64_t n) {
-	if (n == 0) return {0, 1};
-	if (n&1) {
-		auto [x, y] = fib_pair<T>(n-1);
-		return {y, x+y};
+template<class T> T fibonacci(uint64_t n) { 
+	T x = 0, y = 1;
+	for(auto i=bit_width(n); i--; ) {
+		T xx = x*x, xy = x*y, yy = y*y;
+		if(n>>i&1) x = xx + yy, y = xy + xy + yy;
+		else x = xy + xy - xx, y = xx + yy;
 	}
-	auto [x, y] = fib_pair<T>(n>>1);
-	return {x*y + x*(y-x), x*x + y*y};
+	return x;
 }
-template<class T> inline T fibonacci(uint64_t n) { return fib_pair<T>(n).first; }
