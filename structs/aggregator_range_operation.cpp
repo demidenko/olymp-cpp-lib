@@ -27,49 +27,46 @@ struct aggregator {
 		else op = operation;
 	}
 	
-	void push(size_t v, size_t length) const {
+	inline void push(size_t v, size_t l, size_t r, size_t &m, size_t &vl, size_t &vr) const {
+		size_t s = r - l, sl = s / 2; m = l + sl; vl = v + 1; vr = v + sl * 2;
 		if(auto &op = t[v].second) {
-			size_t sl = length >> 1;
-			cover(v+1, op->slice(0, sl), sl);
-			cover(v+sl*2, op->slice(sl, length), length - sl);
+			cover(vl, op->slice(0, sl), sl);
+			cover(vr, op->slice(sl, s), s - sl);
 			op.reset();
 		}
 	}
 	
 	void apply(size_t i, size_t j, const O &op, size_t l, size_t r, size_t v) {
 		if(i == l && j == r) { cover(v, op, r-l); return ; }
-		push(v, r-l);
-		size_t m = (l+r) >> 1, vr = v + (m-l)*2;
-		if(j <= m) apply(i, j, op, l, m, v+1); else
+		size_t m, vl, vr; push(v, l, r, m, vl, vr);
+		if(j <= m) apply(i, j, op, l, m, vl); else
 		if(i >= m) apply(i, j, op, m, r, vr); else {
-			apply(i, m, op.slice(0, m-i), l, m, v+1);
+			apply(i, m, op.slice(0, m-i), l, m, vl);
 			apply(m, j, op.slice(m-i, j-i), m, r, vr);
 		}
-		t[v].first = T(t[v+1].first, t[vr].first);
+		t[v].first = T(t[vl].first, t[vr].first);
 	}
 	
 	void set_value(size_t i, const T &value, size_t l, size_t r, size_t v) {
 		if(l+1 == r) { t[v].first = value; return ; }
-		push(v, r-l);
-		size_t m = (l+r) >> 1, vr = v + (m-l)*2;
-		if(i < m) set_value(i, value, l, m, v+1);
+		size_t m, vl, vr; push(v, l, r, m, vl, vr);
+		if(i < m) set_value(i, value, l, m, vl);
 		else set_value(i, value, m, r, vr);
-		t[v].first = T(t[v+1].first, t[vr].first);
+		t[v].first = T(t[vl].first, t[vr].first);
 	}
 	
 	T calc(size_t i, size_t j, size_t l, size_t r, size_t v) const {
 		if(i == l && j == r) return t[v].first;
-		push(v, r-l);
-		size_t m = (l+r) >> 1, vr = v + (m-l)*2;
-		if(j <= m) return calc(i, j, l, m, v+1);
+		size_t m, vl, vr; push(v, l, r, m, vl, vr);
+		if(j <= m) return calc(i, j, l, m, vl);
 		if(i >= m) return calc(i, j, m, r, vr);
-		return T(calc(i, m, l, m, v+1), calc(m, j, m, r, vr));
+		return T(calc(i, m, l, m, vl), calc(m, j, m, r, vr));
 	}
 	
 	T& build(size_t l, size_t r, size_t v, auto &&gen) {
 		if(l+1 == r) return t[v].first = gen(l);
-		size_t m = (l+r) >> 1, vr = v + (m-l)*2;
-		return t[v].first = T(build(l, m, v+1, gen), build(m, r, vr, gen));
+		size_t m, vl, vr; push(v, l, r, m, vl, vr);
+		return t[v].first = T(build(l, m, vl, gen), build(m, r, vr, gen));
 	}
 };
 /*
