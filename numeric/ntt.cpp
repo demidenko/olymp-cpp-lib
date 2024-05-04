@@ -3,7 +3,7 @@ namespace NTT {
 	
 	template<int mod> struct ntt_device {
 		using mint = modint<mod>;
-		static constexpr size_t H = ctz(mod-1), MAXN = size_t(1) << H;
+		static constexpr size_t H = ctz(mod-1);
 		
 		static inline const auto roots = [] {
 			array<mint, H+1> r{};
@@ -16,7 +16,7 @@ namespace NTT {
 		}();
 		
 		static void ntt(vector<mint> &a) {
-			const size_t n = size(a); assert((n&(n-1)) == 0 && n <= MAXN);
+			const size_t n = size(a); assert(std::has_single_bit(n) && n <= (1uz << H));
 			for(size_t i=1, j=0, t; i<n; ++i) {
 				for(t = n>>1; j&t; t>>=1) j^=t;
 				if((j^=t) < i) swap(a[i], a[j]);
