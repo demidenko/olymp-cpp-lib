@@ -43,14 +43,14 @@ namespace NTT {
 	
 	namespace {
 		constexpr size_t min_adequate_h = 13;
-		constexpr bool is_ntt_prime(int p) {
-			if(p < 2 || p%2 == 0 || ctz(p-1) < min_adequate_h) return false;
+		constexpr bool is_ntt_prime(int p, size_t h) {
+			if(p < 2 || p%2 == 0 || ctz(p-1) < h) return false;
 			for(int i=3; i*i<=p; i+=2) if(p%i == 0) return false;
 			return true;
 		}
 		
 		template<class T, size_t min_h> constexpr bool is_ntt_modint = false;
-		template<decltype(auto) mod, size_t min_h> constexpr bool is_ntt_modint<modint<mod>,min_h> = is_same_v<decltype(mod),int> && ctz(mod-1)>=min_h && is_ntt_prime(mod);
+		template<decltype(auto) mod, size_t min_h> constexpr bool is_ntt_modint<modint<mod>,min_h> = is_same_v<decltype(mod),int> && is_ntt_prime(mod, min_h);
 		
 		template<size_t min_h, int min_mod, size_t ...I>
 		constexpr auto __gen_ntt_mods(index_sequence<I...>) {
@@ -58,7 +58,7 @@ namespace NTT {
 				array<int, sizeof...(I)> ar{};
 				for(size_t i = 0, h = 30; h >= min_h; --h)
 				for(int c = 1; i < size(ar) && c <= (numeric_limits<int>::max()>>(h+1)); c+=2)
-				if(int mod = (c<<h)+1; mod >= min_mod && is_ntt_prime(mod)) ar[i++] = mod;
+				if(int mod = (c<<h)+1; mod >= min_mod && is_ntt_prime(mod, h)) ar[i++] = mod;
 				return ar;
 			}();
 			static_assert(mods.back() != 0, "Can't find enough required ntt mods");
