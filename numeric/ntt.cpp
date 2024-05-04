@@ -51,12 +51,12 @@ namespace NTT {
 		template<class T, size_t h> constexpr bool is_ntt_modint = false;
 		template<decltype(auto) mod, size_t h> constexpr bool is_ntt_modint<modint<mod>,h> = is_same_v<decltype(mod),int> && is_ntt_prime(mod, h);
 		
-		template<size_t min_h, int min_mod, size_t ...I>
+		template<size_t min_h, int min_mod, int max_mod = numeric_limits<int>::max()/2+1, size_t ...I>
 		constexpr auto __gen_ntt_mods(index_sequence<I...>) {
 			constexpr auto mods = [] {
 				array<int, sizeof...(I)> ar{};
 				for(size_t i = 0, h = 30; h >= min_h; --h)
-				for(int c = 1; i < size(ar) && c <= (numeric_limits<int>::max()>>(h+1)); c+=2)
+				for(int c = 1; i < size(ar) && c <= ((max_mod-1)>>h); c+=2)
 				if(int mod = (c<<h)+1; mod >= min_mod && is_ntt_prime(mod, min_h)) ar[i++] = mod;
 				return ar;
 			}();
