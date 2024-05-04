@@ -1,6 +1,5 @@
 namespace NTT {
-	constexpr size_t ctz(int n) { return n%2 ? 0 : ctz(n>>1) + 1; }
-	constexpr size_t lg_geq(int n) { return n < 2 ? 0 : lg_geq((n+1)>>1) + 1; }
+	constexpr size_t ctz(uint32_t n) { return std::countr_zero(n); }
 	
 	template<int mod> struct ntt_device {
 		using mint = modint<mod>;
@@ -73,7 +72,7 @@ namespace NTT {
 		template<int mod> vector<modint<mod>> convolution(const vector<auto> &a, const vector<auto> &b) {
 			if(size(a) < size(b)) return convolution<mod>(b, a);
 			if(empty(b)) return {};
-			const size_t n = size(a)+size(b)-1, d = size_t(1)<<lg_geq(n);
+			const size_t n = size(a)+size(b)-1, d = std::bit_ceil(n);
 			vector<modint<mod>> fa(d), fb(d);
 			copy(begin(a), end(a), begin(fa));
 			copy(begin(b), end(b), begin(fb));
@@ -93,7 +92,7 @@ namespace NTT {
 	
 	template<class T, size_t max_size = 1<<23, size_t count_mods = 3, int min_mod = (int)8e8>
 	auto convolution(const vector<auto> &a, const vector<auto> &b) {
-		constexpr size_t h = max(lg_geq(max_size), min_adequate_h);
+		constexpr size_t h = max(std::bit_width(max_size - 1), min_adequate_h);
 		if constexpr (is_ntt_modint<T, h>) return convolution<T::get_mod()>(a, b);
 		else return convolution<T>(a, b, make_ntt_mods<count_mods, h, min_mod>{});
 	}
