@@ -4,8 +4,8 @@ struct modint {
 	modint(integral auto val): x(val%mod) { if(x<0) x+=mod; }
 	static constexpr int32_t get_mod() { return mod; }
 	#define __op(O, E, F) modint& operator E(const modint &b) { F return *this; } friend modint operator O(modint a, const modint &b) { return a E b; }
-	__op(+, +=,  x+=b.x; if(x>=mod) x-=mod; )
-	__op(-, -=,  x-=b.x; if(x<0) x+=mod; )
+	__op(+, +=,  if(int32_t v=mod-b.x; x >= v) x -= v; else x += b.x; )
+	__op(-, -=,  if(x >= b.x) x -= b.x; else x += mod-b.x; )
 	__op(*, *=,  x = int64_t(x)*b.x %mod; )
 	__op(/, /=,  auto i=b.inverse(); assert(i); x = int64_t(i->x)*x %mod; )
 	friend modint operator-(modint a) { if(a.x) a.x = mod - a.x; return a; }
