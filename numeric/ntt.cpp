@@ -42,29 +42,29 @@ namespace NTT {
 	};
 	
 	namespace {
-		constexpr bool is_ntt_prime(int p, size_t h) {
-			if(p < 2 || p%2 == 0 || ctz(p-1) < h) return false;
+		constexpr bool is_ntt_prime(int p, size_t size) {
+			if(p < 2 || p%2 == 0 || ctz(p-1) < std::bit_width(size - 1)) return false;
 			for(int i=3; i*i<=p; i+=2) if(p%i == 0) return false;
 			return true;
 		}
 		
-		template<class T, size_t h> constexpr bool is_ntt_modint = false;
-		template<decltype(auto) mod, size_t h> constexpr bool is_ntt_modint<modint<mod>,h> = is_same_v<decltype(mod),int> && is_ntt_prime(mod, h);
+		template<class T, size_t size> constexpr bool is_ntt_modint = false;
+		template<decltype(auto) mod, size_t size> constexpr bool is_ntt_modint<modint<mod>, size> = is_same_v<decltype(mod),int> && is_ntt_prime(mod, size);
 		
-		template<size_t min_h, int min_mod, int max_mod = numeric_limits<int>::max(), size_t ...I>
+		template<size_t size, int min_mod, int max_mod = numeric_limits<int>::max(), size_t ...I>
 		constexpr auto __gen_ntt_mods(index_sequence<I...>) {
 			constexpr auto mods = [] {
 				array<int, sizeof...(I)> ar{};
-				for(size_t i = 0, h = 30; h >= min_h; --h)
-				for(int c = 1; i < size(ar) && c <= ((max_mod-1)>>h); c+=2)
-				if(int mod = (c<<h)+1; mod >= min_mod && is_ntt_prime(mod, min_h)) ar[i++] = mod;
+				for(size_t i = 0, h = 30; (1u << h) >= size; --h)
+				for(int c = 1; i < ar.size() && c <= ((max_mod-1)>>h); c+=2)
+				if(int mod = (c<<h)+1; mod >= min_mod && is_ntt_prime(mod, size)) ar[i++] = mod;
 				return ar;
 			}();
 			static_assert(mods.back() != 0, "Can't find enough required ntt mods");
 			return integer_sequence<int, mods[I]...>{};
 		}
 		
-		template<size_t count, size_t min_h, int min_mod> using make_ntt_mods = decltype(__gen_ntt_mods<min_h, min_mod>(make_index_sequence<count>{}));
+		template<size_t count, size_t size, int min_mod> using make_ntt_mods = decltype(__gen_ntt_mods<size, min_mod>(make_index_sequence<count>{}));
 		
 		template<int mod> vector<modint<mod>> convolution(const vector<auto> &a, const vector<auto> &b) {
 			if(size(a) < size(b)) return convolution<mod>(b, a);
@@ -87,12 +87,11 @@ namespace NTT {
 		}
 	}
 	
-	template<class T, size_t max_size = 1<<23> requires is_ntt_modint<T, std::bit_width(max_size - 1)>
+	template<class T, size_t max_size = 1<<23> requires is_ntt_modint<T, max_size>
 	auto convolution(const vector<auto> &a, const vector<auto> &b) { return convolution<T::get_mod()>(a, b); }
 	
 	template<class T, class CRT, size_t max_size = 1<<23, size_t count_mods = 3, int min_mod = (int)1e9>
 	auto convolution(const vector<auto> &a, const vector<auto> &b) {
-		constexpr size_t h = std::bit_width(max_size - 1);
-		return convolution<T, CRT>(a, b, make_ntt_mods<count_mods, h, min_mod>{});
+		return convolution<T, CRT>(a, b, make_ntt_mods<count_mods, max_size, min_mod>{});
 	}
 }
