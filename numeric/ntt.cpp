@@ -82,15 +82,17 @@ namespace NTT {
 			return fa;
 		}
 		
-		template<class T, int ...mod> auto convolution(const vector<auto> &a, const vector<auto> &b, integer_sequence<int, mod...>) {
-			return crt_device::evaluate<T>(convolution<mod>(a, b)...);
+		template<class T, class CRT, int ...mod> auto convolution(const vector<auto> &a, const vector<auto> &b, integer_sequence<int, mod...>) {
+			return CRT::template evaluate<T>(convolution<mod>(a, b)...);
 		}
 	}
 	
-	template<class T, size_t max_size = 1<<23, size_t count_mods = 3, int min_mod = (int)1e9>
+	template<class T, size_t max_size = 1<<23> requires is_ntt_modint<T, std::bit_width(max_size - 1)>
+	auto convolution(const vector<auto> &a, const vector<auto> &b) { return convolution<T::get_mod()>(a, b); }
+	
+	template<class T, class CRT, size_t max_size = 1<<23, size_t count_mods = 3, int min_mod = (int)1e9>
 	auto convolution(const vector<auto> &a, const vector<auto> &b) {
 		constexpr size_t h = std::bit_width(max_size - 1);
-		if constexpr (is_ntt_modint<T, h>) return convolution<T::get_mod()>(a, b);
-		else return convolution<T>(a, b, make_ntt_mods<count_mods, h, min_mod>{});
+		return convolution<T, CRT>(a, b, make_ntt_mods<count_mods, h, min_mod>{});
 	}
 }
