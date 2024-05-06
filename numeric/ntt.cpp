@@ -1,9 +1,7 @@
 namespace NTT {
-	constexpr size_t ctz(uint32_t n) { return std::countr_zero(n); }
-	
 	template<int mod> struct ntt_device {
 		using mint = modint<mod>;
-		static constexpr size_t H = ctz(mod-1);
+		static constexpr size_t H = std::countr_zero<uint32_t>(mod-1);
 		
 		static inline const auto roots = [] {
 			array<mint, H+1> r{};
@@ -43,7 +41,7 @@ namespace NTT {
 	
 	namespace {
 		constexpr bool is_ntt_prime(int p, size_t size) {
-			if(p < 2 || p%2 == 0 || ctz(p-1) < std::bit_width(size - 1)) return false;
+			if(p < 2 || p%2 == 0 || (1u << std::countr_zero<uint32_t>(p-1)) < size) return false;
 			for(int i=3; i*i<=p; i+=2) if(p%i == 0) return false;
 			return true;
 		}
