@@ -1,6 +1,6 @@
 template<class T, size_t K>
 struct sum_of_primes {
-	sum_of_primes(uint64_t n): pr(get_primes(root2(n+1)*2)), mem_pi(pr.back()+1) {
+	sum_of_primes(uint64_t n): pr(get_primes(root2(n))), mem_pi(pr.back()+1) {
 		for(auto p : pr) mem_pi[p] = pow<K>(p);
 		for(size_t i=1; i<size(mem_pi); ++i) mem_pi[i] += mem_pi[i-1];
 		
@@ -18,6 +18,7 @@ struct sum_of_primes {
 	T f(uint64_t n, size_t m) const {
 		if(m == 0) return sum_pows<K>(n);
 		if(m < size(mem_f) && n < size(mem_f[m])) return mem_f[m][n];
+		assert(m < size(pr));
 		if(uint64_t p = pr[m]; p > n) return 1; //1**K
 		else if(p * p > n) return pi(n) - pi(p - 1) + 1;
 		return f(n, m - 1) - f(n / pr[m-1], m - 1) * pow<K>(pr[m-1]);
@@ -73,6 +74,7 @@ struct sum_of_primes {
 	vector<vector<T>> mem_f;
 	
 	static auto get_primes(uint32_t n) {
+		if(n < 11) n = 11; //to fix maxn < 4 (empty pr) or pi(8) (infinite recursion)
 		vector<uint32_t> md(n + 1), pr;
 		for(uint32_t i = 2; i <= n; ++i) {
 			if(md[i] == 0) pr.push_back(md[i] = i);
