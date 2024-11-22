@@ -13,6 +13,7 @@ template<std::unsigned_integral T> struct mask_t {
 	friend bool operator==(const mask_t &a, const mask_t &b) = default;
 	
 	operator T() const { return ms; }
+	const T& operator*() const { return ms; }
 	
 	struct bit_reference {
 		mask_t &ms;
