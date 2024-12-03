@@ -4,6 +4,9 @@ template<class... T> struct edge_t : public tuple<size_t,T...> {
 };
 template<class... T> struct std::tuple_size<edge_t<T...>> : tuple_size<tuple<size_t,T...>> {};
 template<size_t I, class... T> struct std::tuple_element<I,edge_t<T...>> : tuple_element<I,tuple<size_t,T...>> {};
+#if __glibcxx_tuple_like
+template<class... T> constexpr bool std::__is_tuple_like_v<edge_t<T...>> = true;	
+#endif
 
 template<class... T> struct graph_t {
 	using E = conditional_t<sizeof...(T), edge_t<T...>, size_t>;
