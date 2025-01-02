@@ -33,13 +33,13 @@ template<std::unsigned_integral T> struct mask_t {
 	
 	struct submask_iterator {
 		T ms, cur;
-		void operator++() { cur = (cur & ms) - 1; }
+		void operator++() { cur = (cur | ~ms) + 1; }
 		bool operator!=(const submask_iterator &it) const { return cur != it.cur; }
-		mask_t operator*() const { return mask_t(ms & cur); }
+		mask_t operator*() const { return mask_t(cur & ms); }
 	};
 	
-	submask_iterator begin() const { return {ms, ms}; }
-	submask_iterator end() const { return {ms, ~T(0)}; }
+	submask_iterator begin() const { return {ms, ~ms}; }
+	submask_iterator end() const { return {ms, 0}; }
 	
 	private: T ms;
 };
