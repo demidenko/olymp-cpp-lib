@@ -2,6 +2,7 @@ template<std::unsigned_integral T> struct mask_t {
 	explicit mask_t(T ms = 0): ms(ms) {}
 	static mask_t ones(size_t n) { return mask_t((T(1) << n) - 1); }
 	static mask_t ones(size_t l, size_t r) { return ones(r) ^ ones(l); }
+	static mask_t bit(size_t i) { return mask_t(T(1) << i); }
 	
 	bool contains(const mask_t &m) const { return (ms & m.ms) == m.ms; }
 	
