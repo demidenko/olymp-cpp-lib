@@ -20,7 +20,8 @@ struct mincost_flow_graph {
 		q.emplace(d[S] = 0, S);
 		while(!empty(q)) {
 			auto [di, i] = q.top();
-			if(q.pop(), di > d[i]) continue ;
+			q.pop();
+			if(di > d[i]) continue ;
 			for(size_t k : g[i]) if(edges[k].rem() > 0) {
 				size_t j = edges[k].to;
 				C dist = d[i] + edges[k].cost + p[i] - p[j];
@@ -31,7 +32,7 @@ struct mincost_flow_graph {
 		if(fr[T] == -1) return {0, 0};
 		
 		for(size_t k = fr[T]; k != -1; k = fr[edges[k^1].to])
-			flow = min(flow, edges[k].rem());
+			flow = std::min(flow, edges[k].rem());
 		
 		C cost = 0;
 		for(size_t k = fr[T]; k != -1; k = fr[edges[k^1].to]) {
@@ -50,6 +51,17 @@ struct mincost_flow_graph {
 			if(auto [f, c] = push(flow); f == 0) return nullopt;
 			else flow -= f, cost += c;
 		return cost;
+	}
+	
+	result mincost_maxflow() {
+		F flow = 0;
+		C cost = 0;
+		for(;;) {
+			result r = push();
+			if(r.flow == 0) return {flow, cost};
+			flow += r.flow;
+			cost += r.cost;
+		}
 	}
 	
 	private:
