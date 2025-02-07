@@ -2,7 +2,7 @@ template<class T>
 struct rsq {
 	explicit rsq(size_t n = 0): f(n) {}
 	rsq(const std::ranges::range auto &vals): f(begin(vals), end(vals)) {
-		for(size_t i=0, j, n=size(f); i<n; ++i) if(j=i|i+1; j<n) f[j] += f[i];
+		for(size_t i=0, j, n=size(f); i<n; ++i) if(j=i|(i+1); j<n) f[j] += f[i];
 	}
 	void add(size_t i, const T &val) {
 		for(; i < size(f); i|=i+1) f[i] += val;
