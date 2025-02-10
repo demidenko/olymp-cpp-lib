@@ -55,14 +55,11 @@ void mex_rects(const vector<int> &a, auto &&mex_rect) {
 	
 	rmq<int, greater{}> mfpos(fpos);
 	for(int i=0; i<n; ++i) {
-		if(int x = sx[i], r = sr[i]; r) {
-			del(i, i+1);
-			ins(i+1, r, x, i+1);
-		}
+		del(i, i+1);
+		ins(i+1, sr[i], sx[i], i+1);
 		if(int x = a[i]; x < n) {
 			mfpos.set_value(x, fpos[x] = nxt[i]);
-			int r = fpos[x];
-			int l = x > 0 ? mfpos(0, x) : i+1;
+			int l = x > 0 ? mfpos(0, x) : i+1, r = fpos[x];
 			replace(l, r, x, i+1);
 		}
 	}
